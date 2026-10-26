@@ -1,0 +1,7 @@
+<exceptions>
+    <exception package="com.xiaomi.bluetooth">
+        <permission name="android.permission.BLUETOOTH_CONNECT" fixed="true" />
+        <permission name="android.permission.BLUETOOTH_SCAN" fixed="true" />
+        <permission name="android.permission.BLUETOOTH_ADVERTISE" fixed="true" />
+    </exception>
+</exceptions>

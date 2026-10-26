@@ -1,0 +1,13 @@
+{
+  "frameworks/base": {
+    "services/core/java/com/android/server/policy/NabuInputPolicy.java": null,
+    "services/core/java/com/android/server/policy/PhoneWindowManager.java": "cc24fae3d9b35c93f6aa3318ac797998e3ac623ffe9ba4a65e4942acc91a0a06",
+    "services/core/java/com/android/server/input/KeyGestureController.java": "ef37372993f2ea64fcf5104bb7cbefccd8dd502a52f98c539a3bceccdcfa44fe"
+  },
+  "packages/apps/Settings": {
+    "src/com/android/settings/nabu/NabuInputPreferenceController.java": null,
+    "res/values/nabu_input.xml": null,
+    "res/values-ko/nabu_input.xml": null,
+    "res/xml/top_level_settings.xml": "18be8bc607ae52ead908c49f4f799cb72162d83afa90130000e31b177898ad08"
+  }
+}

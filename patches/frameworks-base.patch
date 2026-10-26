@@ -1,0 +1,259 @@
+--- /dev/null
++++ b/services/core/java/com/android/server/policy/NabuInputPolicy.java
+@@ -0,0 +1,217 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package com.android.server.policy;
++
++import android.app.ActivityManager;
++import android.app.ActivityTaskManager;
++import android.app.KeyguardManager;
++import android.app.StatusBarManager;
++import android.app.WindowConfiguration;
++import android.content.BroadcastReceiver;
++import android.content.ComponentName;
++import android.content.Context;
++import android.content.Intent;
++import android.content.IntentFilter;
++import android.database.ContentObserver;
++import android.hardware.input.InputManager;
++import android.os.Handler;
++import android.os.PowerManager;
++import android.os.SystemClock;
++import android.os.SystemProperties;
++import android.os.UserHandle;
++import android.provider.Settings;
++import android.util.Log;
++import android.view.InputDevice;
++import android.view.KeyEvent;
++import android.view.WindowManager;
++import com.android.internal.util.ScreenshotHelper;
++import com.android.server.LocalServices;
++import com.android.server.statusbar.StatusBarManagerInternal;
++import java.util.HashMap;
++import java.util.Map;
++import org.json.JSONArray;
++import org.json.JSONObject;
++
++/** Nabu-only consumer for the original input UI's persisted shortcut configuration. */
++public final class NabuInputPolicy {
++    private static final String TAG="NabuInputPolicy";
++    private static final String KEY="nabu_keyboard_shortcuts";
++    private final Context context;
++    private final Handler handler;
++    private final boolean enabled=SystemProperties.getBoolean("ro.nabu.input_port",false);
++    private final Map<Long,Pending> stylus=new HashMap<>();
++    private final java.util.Set<Long> consumed=new java.util.HashSet<>();
++    private volatile Map<Long,JSONObject> shortcuts=Map.of();
++    private volatile int user;
++    private volatile boolean shortcutsEffective=true;
++
++    NabuInputPolicy(Context context,Handler handler) {
++        this.context=context;this.handler=handler;
++        if(!enabled)return;
++        LocalServices.addService(NabuInputPolicy.class,this);
++        user=ActivityManager.getCurrentUser();
++        context.getContentResolver().registerContentObserver(Settings.Secure.getUriFor(KEY),false,
++                new ContentObserver(handler){@Override public void onChange(boolean self){reload();}},UserHandle.USER_ALL);
++        context.registerReceiver(new BroadcastReceiver(){@Override public void onReceive(Context c,Intent i){
++            shortcuts=Map.of();shortcutsEffective=true;
++            synchronized(consumed){consumed.clear();}
++            synchronized(stylus){for(Pending p:stylus.values())handler.removeCallbacks(p);stylus.clear();}
++            user=i.getIntExtra(Intent.EXTRA_USER_HANDLE,UserHandle.USER_SYSTEM);reload();
++        }},new IntentFilter(Intent.ACTION_USER_SWITCHED),null,handler);
++        context.getContentResolver().registerContentObserver(Settings.System.getUriFor("is_custom_shortcut_effective"),false,
++                new ContentObserver(handler){@Override public void onChange(boolean self){reload();}},UserHandle.USER_ALL);
++        context.getSystemService(InputManager.class).registerInputDeviceListener(new InputManager.InputDeviceListener(){
++            @Override public void onInputDeviceAdded(int id) {}
++            @Override public void onInputDeviceChanged(int id) {}
++            @Override public void onInputDeviceRemoved(int id) {
++                synchronized(stylus){stylus.entrySet().removeIf(entry->{if((int)(entry.getKey()>>32)!=id)return false;handler.removeCallbacks(entry.getValue());return true;});}
++                synchronized(consumed){consumed.removeIf(key->(int)(key>>32)==id);}
++            }
++        },handler);
++        handler.post(this::reload);
++    }
++    private void reload() {
++        Map<Long,JSONObject> next=new HashMap<>();
++        try {
++            shortcutsEffective=Settings.System.getIntForUser(context.getContentResolver(),"is_custom_shortcut_effective",1,user)!=0;
++            String json=Settings.Secure.getStringForUser(context.getContentResolver(),KEY,user);
++            if(json==null)json=java.nio.file.Files.readString(java.nio.file.Path.of("/system_ext/etc/nabu-input/shortcuts.json"));
++            JSONArray data=new JSONArray(json);
++            for(int i=0;i<data.length();i++){JSONObject item=data.getJSONObject(i);if(item.optBoolean("active",true))next.put(item.getLong("key"),item);}
++            shortcuts=Map.copyOf(next);
++        }catch(Exception e){Log.e(TAG,"Invalid shortcut configuration; retaining previous configuration",e);}
++    }
++    /** Only the original shortcut editor may temporarily capture reserved key combinations. */
++    public boolean isEditingShortcuts(KeyEvent event) {
++        if(!enabled||shortcutsEffective||context.getSystemService(KeyguardManager.class).isKeyguardLocked())return false;
++        InputDevice d=event.getDevice();
++        if(d==null||d.isVirtual()||d.getKeyboardType()!=InputDevice.KEYBOARD_TYPE_ALPHABETIC)return false;
++        try {
++            var tasks=ActivityTaskManager.getInstance().getTasks(1);
++            return !tasks.isEmpty()&&tasks.get(0).topActivity!=null
++                    &&tasks.get(0).topActivity.getPackageName().equals("com.miui.miinput");
++        }catch(RuntimeException failure){Log.w(TAG,"Cannot identify shortcut editor",failure);return false;}
++    }
++    /** Runs before the built-in shortcut stages so edited stock shortcuts win. */
++    public boolean interceptKeyBeforeDispatching(KeyEvent e) {
++        if(!enabled || (e.getFlags()&KeyEvent.FLAG_FALLBACK)!=0)return false;
++        long id=((long)e.getDeviceId()<<32)|(e.getKeyCode()&0xffffffffL);
++        boolean wasConsumed;
++        synchronized(consumed){wasConsumed=consumed.contains(id);}
++        boolean possible=shortcutFor(e)!=null
++                ||isStylus(e.getDevice())&&(e.getKeyCode()==KeyEvent.KEYCODE_PAGE_UP||e.getKeyCode()==KeyEvent.KEYCODE_PAGE_DOWN);
++        if(!possible&&!wasConsumed)return false;
++        boolean handled=onKeyEvent(e,context.getSystemService(KeyguardManager.class).isKeyguardLocked());
++        synchronized(consumed){
++            if(handled&&e.getAction()==KeyEvent.ACTION_DOWN&&e.getRepeatCount()==0)consumed.add(id);
++            if(e.getAction()==KeyEvent.ACTION_UP||e.isCanceled())consumed.remove(id);
++        }
++        return handled||wasConsumed;
++    }
++    boolean onKeyEvent(KeyEvent e,boolean keyguardShowing) {
++        if(!enabled || (e.getFlags()&KeyEvent.FLAG_FALLBACK)!=0)return false;
++        if(keyguardShowing || !context.getSystemService(PowerManager.class).isInteractive()) {
++            if(e.getAction()==KeyEvent.ACTION_UP || e.isCanceled()) {
++                long id=((long)e.getDeviceId()<<32)|(e.getKeyCode()&0xffffffffL);
++                synchronized(stylus){Pending old=stylus.remove(id);if(old!=null)handler.removeCallbacks(old);}
++            }
++            return false;
++        }
++        InputDevice device=e.getDevice();
++        if(isStylus(device) && (e.getKeyCode()==KeyEvent.KEYCODE_PAGE_DOWN||e.getKeyCode()==KeyEvent.KEYCODE_PAGE_UP)) {
++            if(e.getKeyCode()==KeyEvent.KEYCODE_PAGE_DOWN && notesForeground())return false;
++            return stylusEvent(e);
++        }
++        if(device==null||device.isVirtual()||device.getKeyboardType()!=InputDevice.KEYBOARD_TYPE_ALPHABETIC)return false;
++        if(e.getAction()!=KeyEvent.ACTION_DOWN||e.getRepeatCount()!=0)return false;
++        JSONObject action=shortcutFor(e);
++        if(action==null)return false;
++        int requestedUser=user;handler.post(()->runAction(action,requestedUser));return true;
++    }
++    private JSONObject shortcutFor(KeyEvent e) {
++        int modifiers=KeyEvent.normalizeMetaState(e.getMetaState())&
++                (KeyEvent.META_META_ON|KeyEvent.META_ALT_ON|KeyEvent.META_ALT_LEFT_ON|KeyEvent.META_ALT_RIGHT_ON|KeyEvent.META_CTRL_ON|KeyEvent.META_SHIFT_ON|KeyEvent.META_SYM_ON|KeyEvent.META_FUNCTION_ON);
++        JSONObject result=shortcuts.get(((long)modifiers<<32)|(e.getKeyCode()&0xffffffffL));
++        if(result!=null)return result;
++        // Stock defaults use generic Alt, while the original editor preserves AltGr/left Alt.
++        modifiers&=~(KeyEvent.META_ALT_LEFT_ON|KeyEvent.META_ALT_RIGHT_ON);
++        return shortcuts.get(((long)modifiers<<32)|(e.getKeyCode()&0xffffffffL));
++    }
++    private boolean notesForeground() {
++        try {
++            var tasks=ActivityTaskManager.getInstance().getTasks(1);
++            if(tasks.isEmpty()||tasks.get(0).topActivity==null)return false;
++            String p=tasks.get(0).topActivity.getPackageName();
++            return p.equals("com.miui.notes")||p.equals("com.miui.pen.demo")||p.equals("com.miui.creation");
++        }catch(RuntimeException e){Log.w(TAG,"Cannot identify focused notes task",e);return false;}
++    }
++    private boolean stylusEvent(KeyEvent e) {
++        long id=((long)e.getDeviceId()<<32)|(e.getKeyCode()&0xffffffffL);
++        synchronized(stylus) {
++            if(e.getAction()==KeyEvent.ACTION_DOWN){
++                if(e.getRepeatCount()!=0)return true;
++                Pending old=stylus.remove(id);if(old!=null)handler.removeCallbacks(old);
++                Pending pending=new Pending(new KeyEvent(e),user);stylus.put(id,pending);handler.postDelayed(pending,380);return true;
++            }
++            Pending pending=stylus.remove(id);if(pending==null)return false;handler.removeCallbacks(pending);
++            if(!pending.triggered&&!e.isCanceled()&&pending.user==user){
++                KeyEvent up=new KeyEvent(e);
++                handler.post(()->{
++                    InputManager im=context.getSystemService(InputManager.class);
++                    im.injectInputEvent(KeyEvent.changeFlags(pending.down,pending.down.getFlags()|KeyEvent.FLAG_FALLBACK),InputManager.INJECT_INPUT_EVENT_MODE_ASYNC);
++                    im.injectInputEvent(KeyEvent.changeFlags(up,up.getFlags()|KeyEvent.FLAG_FALLBACK),InputManager.INJECT_INPUT_EVENT_MODE_ASYNC);
++                });
++            }
++            return true;
++        }
++    }
++    private final class Pending implements Runnable {
++        final KeyEvent down;final int user;volatile boolean triggered;
++        Pending(KeyEvent down,int user){this.down=down;this.user=user;}
++        @Override public void run(){
++            synchronized(stylus){if(!stylus.containsValue(this)||this.user!=NabuInputPolicy.this.user)return;triggered=true;}
++            if(InputDevice.getDevice(down.getDeviceId())==null)return;
++            if(context.getSystemService(KeyguardManager.class).isKeyguardLocked()||!context.getSystemService(PowerManager.class).isInteractive())return;
++            if(down.getKeyCode()==KeyEvent.KEYCODE_PAGE_UP)regionalScreenshot(user);
++            else {
++                Intent note=new Intent("android.intent.action.CREATE_NOTE").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++                Intent stock=new Intent("com.miui.pad.notes.action.INSERT_OR_EDIT").setPackage("com.miui.notes")
++                    .setType("vnd.android.cursor.item/text_note").putExtra("shortcut","stylus")
++                    .putExtra("scene","app").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++                try{context.startActivityAsUser(stock,UserHandle.of(user));}
++                catch(RuntimeException absent){try{context.startActivityAsUser(note,UserHandle.of(user));}catch(RuntimeException failure){Log.e(TAG,"No compatible notes application",failure);}}
++            }
++        }
++    }
++    private void regionalScreenshot(int requestedUser) {
++        try {context.startActivityAsUser(new Intent().setComponent(new ComponentName("com.miui.miinput",
++                "org.pixelos.nabu.compat.RegionalScreenshotActivity")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS),UserHandle.of(requestedUser));}
++        catch(RuntimeException failure){Log.e(TAG,"Regional screenshot backend unavailable",failure);}
++    }
++    private void runAction(JSONObject action,int requestedUser) {
++        if(requestedUser!=user||context.getSystemService(KeyguardManager.class).isKeyguardLocked())return;
++        try {
++            StatusBarManager bars=context.getSystemService(StatusBarManager.class);
++            switch(action.getInt("type")) {
++                case 0:context.startActivityAsUser(new Intent().setComponent(new ComponentName(action.getString("package"),action.getString("class")))
++                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),UserHandle.of(requestedUser));break;
++                case 1:bars.expandSettingsPanel();break;
++                case 2:bars.expandNotificationsPanel();break;
++                case 3:LocalServices.getService(StatusBarManagerInternal.class).toggleRecentApps();break;
++                case 4:context.startActivityAsUser(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),UserHandle.of(requestedUser));break;
++                case 5:context.getSystemService(PowerManager.class).goToSleep(SystemClock.uptimeMillis());break;
++                case 6:new ScreenshotHelper(context).takeScreenshot(WindowManager.ScreenshotSource.SCREENSHOT_KEY_OTHER,handler,null);break;
++                case 7:regionalScreenshot(requestedUser);break;
++                case 8:
++                    var tasks=ActivityTaskManager.getInstance().getTasks(1);
++                    if(!tasks.isEmpty()&&tasks.get(0).getActivityType()==WindowConfiguration.ACTIVITY_TYPE_STANDARD
++                            &&tasks.get(0).userId==requestedUser)ActivityTaskManager.getService().removeTask(tasks.get(0).taskId);
++                    break;
++                default:Log.e(TAG,"Unsupported stored shortcut action "+action);break;
++            }
++        }catch(Exception failure){Log.e(TAG,"Shortcut action failed",failure);}
++    }
++    private static boolean isStylus(InputDevice d){
++        if(d==null)return false;int v=d.getVendorId(),p=d.getProductId();
++        return v==0x1915&&(p==0xeaea||p==0x4d81)||v==0x22&&p==0x4d80;
++    }
++}
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -599,6 +599,7 @@
+     int mShortPressOnSleepBehavior;
+     int mShortPressOnWindowBehavior;
+     boolean mStylusButtonsEnabled = true;
++    private NabuInputPolicy mNabuInputPolicy;
+     boolean mKidsModeEnabled;
+     boolean mHasSoftInput = false;
+     boolean mUseTvRouting;
+@@ -2438,6 +2439,7 @@
+         }
+ 
+         mHandler = new PolicyHandler(injector.getLooper());
++        mNabuInputPolicy = new NabuInputPolicy(mContext, mHandler);
+         mScreenshotHelper = new ScreenshotHelper(mContext);
+         mSwipeToScreenshot = new SwipeToScreenshotListener(mContext, () -> takeScreenshot(
+                 SCREENSHOT_KEY_OTHER));
+--- a/services/core/java/com/android/server/input/KeyGestureController.java
++++ b/services/core/java/com/android/server/input/KeyGestureController.java
+@@ -615,6 +615,18 @@
+             mPendingCapsLockToggle = false;
+         }
+ 
++        // The Pad 5 stock UI owns these configured shortcuts. Keep meta/caps tracking above,
++        // then handle nabu before the normal reserved shortcut stages.
++        var nabuPolicy = LocalServices.getService(com.android.server.policy.NabuInputPolicy.class);
++        if (nabuPolicy != null) {
++            if (nabuPolicy.isEditingShortcuts(event)) {
++                return KEY_INTERCEPT_RESULT_NOT_CONSUMED;
++            }
++            if (nabuPolicy.interceptKeyBeforeDispatching(event)) {
++                return KEY_INTERCEPT_RESULT_CONSUMED;
++            }
++        }
++
+         // Multi-key shortcuts should never be blocked by any focused window configuration
+         long result = interceptMultiKeyCombination(event);
+         if (result != KEY_INTERCEPT_RESULT_NOT_CONSUMED) {

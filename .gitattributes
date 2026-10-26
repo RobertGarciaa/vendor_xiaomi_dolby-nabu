@@ -1,0 +1,4 @@
+# Preserve hash-pinned stock bytes, including original CRLF.
+proprietary/** -text -whitespace
+# Unified diff context lines intentionally contain one leading space.
+patches/*.patch -whitespace

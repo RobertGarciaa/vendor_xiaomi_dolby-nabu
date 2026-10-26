@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ShortcutInfos>
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="29" meta="true" shift="false" type="6" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="32" meta="true" shift="false" type="4" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="40" meta="true" shift="false" type="5" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="41" meta="true" shift="false" type="1" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="42" meta="true" shift="false" type="2" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="61" meta="true" shift="false" type="3" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="29" meta="true" shift="true" type="7" />
+    <ShortcutInfo alt="false" ctrl="false" customized="true" enable="true" keycode="51" meta="true" shift="false" type="8" />
+    <ShortcutInfo alt="false" className="com.miui.notes.ui.NotesListActivity" ctrl="false" customized="true" enable="true" keycode="30" meta="true" packageName="com.miui.notes" shift="false" type="0" />
+    <ShortcutInfo alt="false" className="com.miui.calculator.cal.CalculatorActivity" ctrl="false" customized="true" enable="true" keycode="31" meta="true" packageName="com.miui.calculator" shift="false" type="0" />
+</ShortcutInfos>

@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+vendor_restricted_prop(vendor_nabu_touch_config_prop)
+set_prop(vendor_init, vendor_nabu_touch_config_prop)
+get_prop(hal_nabu_touchfeature_default, vendor_nabu_touch_config_prop)
+get_prop(hal_nabu_touchfeature_client, vendor_nabu_touch_config_prop)

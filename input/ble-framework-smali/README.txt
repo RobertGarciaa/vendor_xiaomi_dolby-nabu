@@ -1,0 +1,2 @@
+ITouchFeature.smali is extracted without code edits from the pinned nabu system_ext/framework/miui-framework.jar. It speaks the original vendor.xiaomi.hardware.touchfeature HIDL protocol. It is an app-local API dependency, not a replacement boot framework.
+App assembly removes only boot hidden-API access flags (blacklist/whitelist); instruction bodies are unchanged. These are app-local classes, never boot-class replacements.

@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+type hal_nabu_touchfeature_default, domain;
+type hal_nabu_touchfeature_default_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(hal_nabu_touchfeature_default)
+hal_server_domain(hal_nabu_touchfeature_default, hal_nabu_touchfeature)
+hwbinder_use(hal_nabu_touchfeature_default)
+type hal_nabu_touchfeature_hwservice, hwservice_manager_type, protected_hwservice;
+add_hwservice(hal_nabu_touchfeature_server, hal_nabu_touchfeature_hwservice)
+allow hal_nabu_touchfeature_client hal_nabu_touchfeature_hwservice:hwservice_manager find;
+binder_call(hal_nabu_touchfeature_client, hal_nabu_touchfeature_server)
+binder_call(hal_nabu_touchfeature_server, hal_nabu_touchfeature_client)
+type nabu_touch_device, dev_type;
+allow hal_nabu_touchfeature_default nabu_touch_device:chr_file rw_file_perms;

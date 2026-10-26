@@ -16,10 +16,19 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('dump', nargs='?', type=Path)
     p.add_argument('--verify-only', action='store_true')
+    p.add_argument('--group', choices=['atmos','input','all'], default='atmos')
     a = p.parse_args()
     if not a.verify_only and not a.dump:
         p.error('specify a stock nabu dump or --verify-only')
-    entries = [line.split(None, 1) for line in (ROOT / 'proprietary-files.sha256sum').read_text().splitlines() if line and not line.startswith('#')]
+    records = {}
+    for group in groups:
+        sums = ROOT / ('proprietary-files.sha256sum' if group == 'atmos' else 'proprietary-' + group + '.sha256sum')
+        for line in sums.read_text().splitlines():
+            if not line or line.startswith('#'): continue
+            sha, rel = line.split(None, 1)
+            if rel in records and records[rel] != sha: raise SystemExit('Conflicting source pin: ' + rel)
+            records[rel] = sha
+    entries = [(sha, rel) for rel, sha in records.items()]
     if a.verify_only:
         for expected, rel in entries:
             f = ROOT / 'proprietary' / rel

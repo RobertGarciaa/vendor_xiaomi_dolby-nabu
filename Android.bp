@@ -289,3 +289,115 @@ cc_prebuilt_library_shared {
     prefer: true,
     soc_specific: true,
 }
+
+// Pad 5 stock input settings. Generated APKs preserve original resources/assets.
+android_app_import {
+    name: "NabuMiuiInputSettings",
+    apk: "proprietary/ported/product/app/MiuiInputSettings/MiuiInputSettings.apk",
+    certificate: "platform",
+    privileged: true,
+    system_ext_specific: true,
+    enforce_uses_libs: false,
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+// Only stock stylus/keyboard OTA services are exposed; Bluetooth itself is AOSP.
+android_app_import {
+    name: "NabuStylusOta",
+    apk: "proprietary/ported/system_ext/priv-app/NabuStylusOta/NabuStylusOta.apk",
+    certificate: "platform",
+    privileged: true,
+    system_ext_specific: true,
+    uses_libs: ["org.apache.http.legacy"],
+    dex_preopt: {
+        enabled: false,
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "nabu_touchfeature_interface",
+    stem: "vendor.xiaomi.hardware.touchfeature@1.0",
+    arch: {
+        arm: {
+            srcs: ["proprietary/vendor/lib/vendor.xiaomi.hardware.touchfeature@1.0.so"],
+        },
+        arm64: {
+            srcs: ["proprietary/vendor/lib64/vendor.xiaomi.hardware.touchfeature@1.0.so"],
+        },
+    },
+    compile_multilib: "both",
+    shared_libs: [
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+    strip: {
+        none: true,
+    },
+    vendor: true,
+}
+
+cc_prebuilt_library_shared {
+    name: "nabu_touchfeature_impl",
+    stem: "vendor.xiaomi.hardware.touchfeature@1.0-impl",
+    srcs: ["proprietary/vendor/lib64/hw/vendor.xiaomi.hardware.touchfeature@1.0-impl.so"],
+    compile_multilib: "64",
+    shared_libs: [
+        "nabu_touchfeature_interface",
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libhardware",
+        "libbase",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+    relative_install_path: "hw",
+    strip: {
+        none: true,
+    },
+    vendor: true,
+}
+
+cc_prebuilt_binary {
+    name: "nabu_touchfeature_hal",
+    stem: "vendor.xiaomi.hardware.touchfeature@1.0-service",
+    srcs: ["proprietary/vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service"],
+    compile_multilib: "64",
+    shared_libs: [
+        "nabu_touchfeature_interface",
+        "libhidlbase",
+        "libhidltransport",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libhardware",
+        "libbase",
+        "libbinder",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+    required: ["nabu_touchfeature_impl"],
+    relative_install_path: "hw",
+    init_rc: ["input/configs/touchfeature.rc"],
+    vintf_fragments: ["input/configs/touchfeature-manifest.xml"],
+    strip: {
+        none: true,
+    },
+    vendor: true,
+}

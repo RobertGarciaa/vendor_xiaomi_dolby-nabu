@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+attribute hal_nabu_touchfeature;
+attribute hal_nabu_touchfeature_client;
+attribute hal_nabu_touchfeature_server;

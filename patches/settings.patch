@@ -1,0 +1,54 @@
+--- /dev/null
++++ b/src/com/android/settings/nabu/NabuInputPreferenceController.java
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: Apache-2.0 */
++package com.android.settings.nabu;
++import android.content.Context;
++import android.content.ComponentName;
++import android.content.Intent;
++import android.os.SystemProperties;
++import com.android.settings.core.BasePreferenceController;
++public final class NabuInputPreferenceController extends BasePreferenceController {
++ public NabuInputPreferenceController(Context c,String key){super(c,key);}
++ @Override public int getAvailabilityStatus(){
++  if(!SystemProperties.getBoolean("ro.nabu.input_port",false))return UNSUPPORTED_ON_DEVICE;
++  Intent i=new Intent().setComponent(new ComponentName("com.miui.miinput","com.miui.miinput.stylus.KeyBoardAndStylusSettingsActivity"));
++  return i.resolveActivity(mContext.getPackageManager())!=null?AVAILABLE:UNSUPPORTED_ON_DEVICE;
++ }
++}
+--- /dev/null
++++ b/res/values/nabu_input.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources><string name="nabu_stylus_keyboard_title">Stylus &amp; keyboard</string></resources>
+--- /dev/null
++++ b/res/values-ko/nabu_input.xml
+@@ -0,0 +1,2 @@
++<?xml version="1.0" encoding="utf-8"?>
++<resources><string name="nabu_stylus_keyboard_title">스타일러스 &amp; 키보드</string></resources>
+--- a/res/xml/top_level_settings.xml
++++ b/res/xml/top_level_settings.xml
+@@ -82,11 +82,22 @@
+             android:summary="@string/sound_dashboard_summary"
+             settings:highlightableMenuKey="@string/menu_key_sound"/>
+ 
++        <!-- Pad 5 stock path: Settings > Stylus & keyboard, directly below Sound. -->
++        <com.android.settings.widget.HomepagePreference
++            android:key="top_level_nabu_stylus_keyboard"
++            android:order="-39"
++            android:icon="@drawable/ic_devices_other_filled"
++            android:title="@string/nabu_stylus_keyboard_title"
++            settings:controller="com.android.settings.nabu.NabuInputPreferenceController">
++            <intent android:targetPackage="com.miui.miinput"
++                android:targetClass="com.miui.miinput.stylus.KeyBoardAndStylusSettingsActivity" />
++        </com.android.settings.widget.HomepagePreference>
++
+         <com.android.settings.widget.RestrictedHomepagePreference
+             android:fragment="com.android.settings.notification.modes.ZenModesListFragment"
+             android:icon="@*android:drawable/ic_zen_priority_modes"
+             android:key="top_level_priority_modes"
+-            android:order="-35"
++            android:order="-39"
+             android:title="@string/zen_modes_list_title"
+             settings:useAdminDisabledSummary="true"
+             settings:highlightableMenuKey="@string/menu_key_priority_modes"

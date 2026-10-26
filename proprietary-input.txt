@@ -1,0 +1,18 @@
+# Pad 5 nabu OS1.0.6.0.TKXMIXM stock inputs
+product/app/MiuiInputSettings_MIUI15/MiuiInputSettings_MIUI15.apk
+product/overlay/MiuiInputSettingsOverlay.apk
+product/etc/device_features/nabu.xml
+system_ext/etc/input/stylus_palm_reject_config.json
+system_ext/etc/input/stylus_page_key_bw_config.json
+system_ext/framework/miui-framework.jar
+system_ext/framework/miui-services.jar
+system/system/app/BluetoothExtension/BluetoothExtension.apk
+system_ext/app/miuisystem/miuisystem.apk
+system/system/framework/framework-res.apk
+system_ext/framework/framework-ext-res/framework-ext-res.apk
+vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service
+vendor/lib64/hw/vendor.xiaomi.hardware.touchfeature@1.0-impl.so
+vendor/lib64/vendor.xiaomi.hardware.touchfeature@1.0.so
+vendor/lib/vendor.xiaomi.hardware.touchfeature@1.0.so
+vendor/etc/init/vendor.xiaomi.hardware.touchfeature@1.0-service.rc
+vendor/etc/vintf/manifest.xml

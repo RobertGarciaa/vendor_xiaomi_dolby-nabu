@@ -1,0 +1,82 @@
+[
+  {
+    "key": 281474976710685,
+    "type": 6,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710688,
+    "type": 4,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710696,
+    "type": 5,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710697,
+    "type": 1,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710698,
+    "type": 2,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710717,
+    "type": 3,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281479271677981,
+    "type": 7,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710707,
+    "type": 8,
+    "active": true,
+    "customized": true,
+    "package": "",
+    "class": ""
+  },
+  {
+    "key": 281474976710686,
+    "type": 0,
+    "active": true,
+    "customized": true,
+    "package": "com.miui.notes",
+    "class": "com.miui.notes.ui.NotesListActivity"
+  },
+  {
+    "key": 281474976710687,
+    "type": 0,
+    "active": true,
+    "customized": true,
+    "package": "com.miui.calculator",
+    "class": "com.miui.calculator.cal.CalculatorActivity"
+  }
+]

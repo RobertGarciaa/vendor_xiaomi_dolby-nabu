@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+type nabu_stylus_ota_app, domain;
+typeattribute nabu_stylus_ota_app coredomain;
+typeattribute nabu_stylus_ota_app platform_app_all;
+app_domain(nabu_stylus_ota_app)
+net_domain(nabu_stylus_ota_app)
+hwbinder_use(nabu_stylus_ota_app)
+hal_client_domain(nabu_stylus_ota_app, hal_nabu_touchfeature)
+binder_call(nabu_stylus_ota_app, bluetooth)

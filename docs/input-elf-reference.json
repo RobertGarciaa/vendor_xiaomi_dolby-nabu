@@ -1,0 +1,96 @@
+[
+  {
+    "blob": "nabu-extras-work/touch-overlay/vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service",
+    "elf_bits": 64,
+    "machine": 183,
+    "strong_imports": 16,
+    "unresolved": [],
+    "providers": {
+      "liblog.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/liblog.so",
+      "libcutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libcutils.so",
+      "libbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libbase.so",
+      "libutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libutils.so",
+      "libbinder.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libbinder.so",
+      "libhardware.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhardware.so",
+      "libhidlbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhidlbase.so",
+      "libhidltransport.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhidltransport.so",
+      "vendor.xiaomi.hardware.touchfeature@1.0.so": "nabu-extras-work/touch-overlay/vendor/lib64/vendor.xiaomi.hardware.touchfeature@1.0.so",
+      "libc++.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libc++.so",
+      "libc.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libc.so",
+      "libm.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libm.so",
+      "libdl.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl.so",
+      "libvndksupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/libvndksupport.so",
+      "libapexsupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/libapexsupport.so",
+      "ld-android.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/ld-android.so",
+      "libdl_android.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl_android.so"
+    }
+  },
+  {
+    "blob": "nabu-extras-work/touch-overlay/vendor/lib64/hw/vendor.xiaomi.hardware.touchfeature@1.0-impl.so",
+    "elf_bits": 64,
+    "machine": 183,
+    "strong_imports": 56,
+    "unresolved": [],
+    "providers": {
+      "libhidlbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhidlbase.so",
+      "libhidltransport.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhidltransport.so",
+      "libutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libutils.so",
+      "liblog.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/liblog.so",
+      "libcutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libcutils.so",
+      "libhardware.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhardware.so",
+      "libbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libbase.so",
+      "libbinder.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libbinder.so",
+      "vendor.xiaomi.hardware.touchfeature@1.0.so": "nabu-extras-work/touch-overlay/vendor/lib64/vendor.xiaomi.hardware.touchfeature@1.0.so",
+      "libc++.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libc++.so",
+      "libc.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libc.so",
+      "libm.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libm.so",
+      "libdl.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl.so",
+      "libvndksupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/libvndksupport.so",
+      "libapexsupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/libapexsupport.so",
+      "ld-android.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/ld-android.so",
+      "libdl_android.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl_android.so"
+    }
+  },
+  {
+    "blob": "nabu-extras-work/touch-overlay/vendor/lib64/vendor.xiaomi.hardware.touchfeature@1.0.so",
+    "elf_bits": 64,
+    "machine": 183,
+    "strong_imports": 153,
+    "unresolved": [],
+    "providers": {
+      "libhidlbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libhidlbase.so",
+      "liblog.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/liblog.so",
+      "libutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libutils.so",
+      "libcutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libcutils.so",
+      "libc++.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libc++.so",
+      "libc.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libc.so",
+      "libm.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libm.so",
+      "libdl.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl.so",
+      "libbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib64/libbase.so",
+      "libvndksupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/libvndksupport.so",
+      "ld-android.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib64/ld-android.so",
+      "libdl_android.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib64/bionic/libdl_android.so"
+    }
+  },
+  {
+    "blob": "nabu-extras-work/touch-overlay/vendor/lib/vendor.xiaomi.hardware.touchfeature@1.0.so",
+    "elf_bits": 32,
+    "machine": 40,
+    "strong_imports": 152,
+    "unresolved": [],
+    "providers": {
+      "libhidlbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib/libhidlbase.so",
+      "liblog.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib/liblog.so",
+      "libutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib/libutils.so",
+      "libcutils.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib/libcutils.so",
+      "libc++.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib/libc++.so",
+      "libc.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib/bionic/libc.so",
+      "libm.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib/bionic/libm.so",
+      "libdl.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib/bionic/libdl.so",
+      "libbase.so": "/home/ccc/android/pixelos/out/target/product/renoir/vendor/lib/libbase.so",
+      "libvndksupport.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib/libvndksupport.so",
+      "ld-android.so": "/home/ccc/android/pixelos/out/target/product/renoir/system/lib/ld-android.so",
+      "libdl_android.so": "/home/ccc/android/pixelos/out/target/product/renoir/apex/com.android.runtime/lib/bionic/libdl_android.so"
+    }
+  }
+]

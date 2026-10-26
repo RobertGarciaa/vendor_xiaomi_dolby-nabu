@@ -1,0 +1,4 @@
+<config>
+    <hidden-api-whitelisted-app package="com.miui.miinput" />
+    <hidden-api-whitelisted-app package="com.xiaomi.bluetooth" />
+</config>

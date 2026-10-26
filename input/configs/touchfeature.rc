@@ -1,0 +1,8 @@
+# Stock touchfeature HAL only; do not start unrelated stock root daemons.
+on boot
+    chown system system /dev/xiaomi-touch
+    chmod 0664 /dev/xiaomi-touch
+service nabu-touchfeature-hal /vendor/bin/hw/vendor.xiaomi.hardware.touchfeature@1.0-service
+    class hal
+    user system
+    group system input
