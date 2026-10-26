@@ -419,6 +419,22 @@ hidl_interface {
     gen_java: false,
 }
 
+java_library {
+    name: "nabu_keyboard_auth",
+    srcs: ["input/usb/src/**/*.java"],
+    installable: false,
+}
+
+// Deliberately absent from PRODUCT_PACKAGES until the MTD/TEE service chain is ported.
+android_app_import {
+    name: "NabuMiDevAuth",
+    apk: "proprietary/ported/system_ext/priv-app/NabuMiDevAuth/NabuMiDevAuth.apk",
+    certificate: "platform",
+    privileged: true,
+    system_ext_specific: true,
+    dex_preopt: { enabled: false },
+}
+
 cc_binary {
     name: "nabu_input_control_service",
     vendor: true,

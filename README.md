@@ -6,6 +6,11 @@ AOSP PixelOS Android 17에 통합하기 위한 저장소입니다. 전체 ROM �
 
 ## 스타일러스·키보드
 
+추가 비교 결과, 현재 커널의 펜 버튼 펌웨어 수정은 이미 포함되어 있습니다.
+mode 22는 현재 확보한 공개/스톡 자료로 실제 전송 구현을 확인할 수 없어 미지원으로
+유지합니다. [공개 커널 비교](docs/public-kernel-input-comparison.md)와
+[USB 인증 소스 단계](docs/usb-keyboard-auth.md)에 구현 범위와 검증 한계를 정리했습니다.
+
 스톡 설정 첫 화면의 **소리 및 진동 다음 → 스타일러스 & 키보드** 위치를
 PixelOS 설정에 추가합니다. 원본 MiuiInputSettings APK와 nabu 리소스 오버레이를
 유지하며 Android 17 프레임워크 단축키 처리와 원본 Bluetooth OTA 서비스의

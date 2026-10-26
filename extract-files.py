@@ -16,10 +16,11 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('dump', nargs='?', type=Path)
     p.add_argument('--verify-only', action='store_true')
-    p.add_argument('--group', choices=['atmos','input','all'], default='atmos')
+    p.add_argument('--group', choices=['atmos','input','usb-auth','all'], default='atmos')
     a = p.parse_args()
     if not a.verify_only and not a.dump:
         p.error('specify a stock nabu dump or --verify-only')
+    groups = ['atmos','input','usb-auth'] if a.group == 'all' else [a.group]
     records = {}
     for group in groups:
         sums = ROOT / ('proprietary-files.sha256sum' if group == 'atmos' else 'proprietary-' + group + '.sha256sum')

@@ -1,0 +1,2 @@
+# Pad 5 OS1.0.6.0.TKXMIXM authentication reference; native service chain is not installed
+product/app/MiDevAuthService/MiDevAuthService.apk
