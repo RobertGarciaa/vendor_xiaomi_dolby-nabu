@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Keep the original stock UI and its nabu resource overlay.
 ifeq ($(wildcard frameworks/base/services/core/java/com/android/server/policy/NabuInputPolicy.java),)
-$(error Nabu input requires tools/apply-platform-patches.py --android-root before lunch/build)
+$(error Nabu input requires the nabu framework patch from vendor/extraPatches branch seventeen_nabu)
 endif
 
 PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu

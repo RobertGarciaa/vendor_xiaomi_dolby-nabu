@@ -43,6 +43,13 @@ python3 vendor/xiaomi/dolby-nabu/tools/build-stylus-ota.py --rom-root "$PWD"
 python3 vendor/xiaomi/dolby-nabu/tools/verify-input.py --rom-root "$PWD"
 ```
 
+정규 패치 관리 위치는 `vendor/extraPatches`의 **seventeen_nabu** 브랜치입니다.
+`patches/frameworks_base/0004-*`와 `patches/packages_apps_Settings/0002-*`에
+메일 패치를 추가했으며 기존 vendorsetup.sh의 git am 순서로 후속 적용합니다.
+현재 프레임워크와 Settings 소스에는 이 포팅 변경을 적용하거나 커밋하지 않습니다.
+위 직접 적용 명령은 독립 체크아웃에서 수동 적용할 때의 대안이며, extraPatches로
+적용한다면 중복 실행하지 않습니다.
+
 패치 적용기는 고정된 원본 해시를 확인하고 변경된 소스에는 덮어쓰지 않습니다.
 이미 정확하게 적용된 패치는 인식합니다. 브랜치 변경 시 직접 검토해 리베이스해야 합니다.
 생성 APK와 소스 해시 기록은 `proprietary/ported/`에 두며 Git에서 제외합니다.
