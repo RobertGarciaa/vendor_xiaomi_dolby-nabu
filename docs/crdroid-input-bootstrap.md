@@ -1,5 +1,9 @@
 # crDroid 커널에 맞춘 입력 활성화: 첫 단계
 
+이 문서는 첫 단계 기록입니다. 현재 앱 제어와 런타임 저장은
+[입력 제어 서비스](crdroid-input-control.md)로 확장되었습니다.
+아래 property 변경 트리거 설명은 초기 구현 기록이며 현재 런타임 쓰기는 서비스가 담당합니다.
+
 대상 커널: android_kernel_xiaomi_sm8150 a6f18ebee00e.
 참고 트리: android_device_xiaomi_nabu ad4d61e의 hwcontrol pen.rs/keyboard.rs와 부팅 복원 흐름.
 기존 스톡 MiuiInputSettings APK는 유지합니다. 커널과 플랫폼 코드는 변경하지 않습니다.

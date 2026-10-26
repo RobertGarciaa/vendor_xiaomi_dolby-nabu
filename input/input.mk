@@ -8,7 +8,8 @@ PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu
 PRODUCT_PACKAGES += \
     NabuMiuiInputSettings \
     NabuMiuiInputSettingsOverlay \
-    NabuStylusOta
+    NabuStylusOta \
+    nabu_input_control_service
 
 PRODUCT_SYSTEM_PROPERTIES += ro.nabu.input_port=true
 # Initial hardware choices; values saved in /data/property take precedence.

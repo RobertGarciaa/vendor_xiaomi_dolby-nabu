@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+service vendor.nabu-input-control /vendor/bin/hw/nabu_input_control_service
+    class hal
+    user system
+    group system

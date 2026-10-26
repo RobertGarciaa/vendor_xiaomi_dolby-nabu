@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: Apache-2.0
+package vendor.pixelos.nabu.input@1.0;
+
+struct State {
+    int32_t penEnabled;
+    int32_t generation2;
+    // Requested persisted state: the kernel's connection node is NOT an enable flag.
+    int32_t keyboardEnabled;
+    int32_t keyboardConnected;
+    // -1 means unavailable/invalid, never an invented percentage or connection state.
+    int32_t batteryPercent;
+    int32_t chargingMilliamp;
+};

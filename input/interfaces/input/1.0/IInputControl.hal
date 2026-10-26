@@ -1,0 +1,9 @@
+// SPDX-License-Identifier: Apache-2.0
+package vendor.pixelos.nabu.input@1.0;
+
+interface IInputControl {
+    getState() generates (State state);
+    // control: 0 = pen, 1 = generation-2 force, 2 = keyboard; value must be 0/1.
+    // 0 = applied and persisted, negative errno = failure.
+    setControl(int32_t control, int32_t value) generates (int32_t result);
+};

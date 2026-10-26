@@ -62,6 +62,32 @@ def main():
         t=app.read_text();anchor='    invoke-super {p0}, Lmiuix/app/Application;->onCreate()V'
         assert t.count(anchor)==1
         app.write_text(t.replace(anchor,'    invoke-static {p0}, '+COMPAT+'->init(Landroid/app/Application;)V\n\n'+anchor))
+        # Keep the original tabbed screen; add one menu entry for kernel controls.
+        activity=smali/'com/miui/miinput/stylus/KeyBoardAndStylusSettingsActivity.smali'
+        t=activity.read_text()
+        assert 'onCreateOptionsMenu(' not in t and 'onOptionsItemSelected(' not in t
+        t+='''
+.method public onCreateOptionsMenu(Landroid/view/Menu;)Z
+    .registers 3
+    invoke-super {p0, p1}, Lt/a;->onCreateOptionsMenu(Landroid/view/Menu;)Z
+    invoke-static {p1}, Lorg/pixelos/nabu/compat/HardwareControls;->addMenu(Landroid/view/Menu;)V
+    const/4 v0, 0x1
+    return v0
+.end method
+
+.method public onOptionsItemSelected(Landroid/view/MenuItem;)Z
+    .registers 3
+    invoke-static {p0, p1}, Lorg/pixelos/nabu/compat/HardwareControls;->open(Landroid/app/Activity;Landroid/view/MenuItem;)Z
+    move-result v0
+    if-eqz v0, :stock
+    return v0
+    :stock
+    invoke-super {p0, p1}, Lt/a;->onOptionsItemSelected(Landroid/view/MenuItem;)Z
+    move-result v0
+    return v0
+.end method
+'''
+        activity.write_text(t)
         device=smali/'d0/d.smali';t=device.read_text()
         pattern=r'\.method public static a\(Landroid/view/InputDevice;\)Z\n.*?\.end method'
         body='''.method public static a(Landroid/view/InputDevice;)Z
@@ -104,6 +130,10 @@ def main():
             f'{{{NS}}}permission':'android.permission.STATUS_BAR_SERVICE',
             f'{{{NS}}}theme':'@android:style/Theme.Translucent.NoTitleBar.Fullscreen',
             f'{{{NS}}}configChanges':'orientation|screenSize|screenLayout|smallestScreenSize'})
+        ET.SubElement(app,'activity',{
+            f'{{{NS}}}name':'org.pixelos.nabu.compat.HardwareControlsActivity',
+            f'{{{NS}}}exported':'false',
+            f'{{{NS}}}theme':'@android:style/Theme.DeviceDefault'})
         # Expose only the original stylus/keyboard screens, not unrelated MIUI gesture controls.
         for activity in app.findall('activity'):
             name=activity.get(f'{{{NS}}}name','')

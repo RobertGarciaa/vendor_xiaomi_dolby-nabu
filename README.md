@@ -13,6 +13,8 @@ PixelOS 설정에 추가합니다. 원본 MiuiInputSettings APK와 nabu 리소�
 [입력 기능 포팅 문서](docs/input-port.md), [검증 기록](docs/input-validation.md)을 보세요.
 현재 crDroid 커널에 맞춘 부팅 활성화와 HAL 기본 제외는
 [입력 활성화 첫 단계](docs/crdroid-input-bootstrap.md)에 정리했습니다.
+원본 앱의 하드웨어 제어 메뉴와 vendor 서비스는
+[입력 제어 서비스](docs/crdroid-input-control.md)를 참고하세요.
 
 ## 원본과 적용 범위
 

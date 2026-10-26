@@ -6,3 +6,5 @@ TARGET_ENABLE_NABU_STOCK_TOUCHFEATURE ?= false
 ifeq ($(TARGET_ENABLE_NABU_STOCK_TOUCHFEATURE),true)
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += vendor/xiaomi/dolby-nabu/input/configs/touchfeature-matrix.xml
 endif
+
+DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += vendor/xiaomi/dolby-nabu/input/configs/input-control-matrix.xml

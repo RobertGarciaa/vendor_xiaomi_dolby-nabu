@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
-# Only vendor init writes these kernel controls. Apps receive no sysfs access.
+# Vendor init restores state; the control HAL applies and persists user choices.
+# Apps receive no sysfs access.
 type vendor_sysfs_nabu_pen, fs_type, sysfs_type;
 type vendor_sysfs_nabu_keyboard, fs_type, sysfs_type;
 allow vendor_init vendor_sysfs_nabu_pen:file rw_file_perms;
@@ -7,3 +8,22 @@ allow vendor_init vendor_sysfs_nabu_keyboard:file rw_file_perms;
 
 vendor_internal_prop(vendor_nabu_input_control_prop)
 set_prop(vendor_init, vendor_nabu_input_control_prop)
+
+type hal_nabu_input_control_default, domain;
+type hal_nabu_input_control_default_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(hal_nabu_input_control_default)
+hal_server_domain(hal_nabu_input_control_default, hal_nabu_input_control)
+hwbinder_use(hal_nabu_input_control_default)
+type hal_nabu_input_control_hwservice, hwservice_manager_type, protected_hwservice;
+add_hwservice(hal_nabu_input_control_server, hal_nabu_input_control_hwservice)
+allow hal_nabu_input_control_client hal_nabu_input_control_hwservice:hwservice_manager find;
+binder_call(hal_nabu_input_control_client, hal_nabu_input_control_server)
+# Callback transport is synchronous; no reverse Binder call or socket is exposed.
+allow hal_nabu_input_control_default vendor_sysfs_nabu_pen:file rw_file_perms;
+allow hal_nabu_input_control_default vendor_sysfs_nabu_keyboard:file rw_file_perms;
+allow hal_nabu_input_control_default sysfs:dir search;
+allow hal_nabu_input_control_default sysfs_type:dir search;
+allow hal_nabu_input_control_default sysfs_type:lnk_file read;
+# Retain the common tree's existing IDT/health labels; read only.
+allow hal_nabu_input_control_default sysfs_battery_supply:file r_file_perms;
+set_prop(hal_nabu_input_control_default, vendor_nabu_input_control_prop)

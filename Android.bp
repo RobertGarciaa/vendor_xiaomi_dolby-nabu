@@ -401,3 +401,44 @@ cc_prebuilt_binary {
     },
     vendor: true,
 }
+
+hidl_package_root {
+    name: "vendor.pixelos.nabu",
+    path: "vendor/xiaomi/dolby-nabu/input/interfaces",
+}
+
+hidl_interface {
+    name: "vendor.pixelos.nabu.input@1.0",
+    root: "vendor.pixelos.nabu",
+    vendor_available: true,
+    srcs: [
+        "input/interfaces/input/1.0/types.hal",
+        "input/interfaces/input/1.0/IInputControl.hal",
+    ],
+    interfaces: ["android.hidl.base@1.0"],
+    gen_java: false,
+}
+
+cc_binary {
+    name: "nabu_input_control_service",
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: [
+        "input/control/Control.cpp",
+        "input/control/service.cpp",
+    ],
+    shared_libs: [
+        "libbase",
+        "libhidlbase",
+        "libutils",
+        "vendor.pixelos.nabu.input@1.0",
+    ],
+    header_libs: ["libcutils_headers"],
+    init_rc: ["input/configs/input-control.rc"],
+    vintf_fragments: ["input/configs/input-control-manifest.xml"],
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+    ],
+}

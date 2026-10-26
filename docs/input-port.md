@@ -76,4 +76,4 @@ nabu에서 검증해야 합니다. 보수적 도달성 조사에는 구형 miui.
 전체 ROM/실기기 검증 전 상태는 포팅 후보입니다. Dolby Vision은 별도로 미완료입니다.
 
 현재 crDroid 커널의 부팅 활성화와 저장된 vendor 상태 적용은
-[첫 단계 구현](crdroid-input-bootstrap.md)을 참고하세요. 원본 앱의 하드웨어 토글은 아직 추가하지 않았습니다.
+[첫 단계 구현](crdroid-input-bootstrap.md)을 참고하세요. 현재 [원본 앱의 하드웨어 제어 메뉴](crdroid-input-control.md)에 사용 여부·세대 선택과 저장을 연결했습니다.

@@ -1,1 +1,2 @@
 vendor.xiaomi.hardware.touchfeature::ITouchFeature u:object_r:hal_nabu_touchfeature_hwservice:s0
+vendor.pixelos.nabu.input::IInputControl u:object_r:hal_nabu_input_control_hwservice:s0

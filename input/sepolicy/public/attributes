@@ -2,3 +2,7 @@
 attribute hal_nabu_touchfeature;
 attribute hal_nabu_touchfeature_client;
 attribute hal_nabu_touchfeature_server;
+
+attribute hal_nabu_input_control;
+attribute hal_nabu_input_control_client;
+attribute hal_nabu_input_control_server;

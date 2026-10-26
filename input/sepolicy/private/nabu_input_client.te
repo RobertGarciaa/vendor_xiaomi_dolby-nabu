@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+# Original MiuiInputSettings uses android.uid.system; UID is also enforced by HAL.
+hal_client_domain(system_app, hal_nabu_input_control)
