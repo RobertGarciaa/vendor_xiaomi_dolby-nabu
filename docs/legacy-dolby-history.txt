@@ -1,0 +1,15 @@
+d549c32 sm8150-common: Track dolby package
+9e1136b sm8150-common: Switch to DolbyAtmos
+22416d8 sm8150-common: dolby: Apply NLSound optimization
+7419ec0 sm8150-common: overlay: Remove unavailable dax from pinner files
+88553f0 sm8150-common: dolby: Add profiles overlay for moto dolby
+ed25ae8 sm8150-common: dolby: Update dax-default from moto
+0ef6db4 sm8150-common: Switch dolby soundfx to libswdap
+aa2e113 sm8150-common: audio: Add dolby to audio effects
+7bc2f41 sm8150-common: audio: Apply NLSound 4.0 optimization for dolby
+3e25763 sm8150-common: audio: Forcefully disable volume leveler
+c44eb37 sm8150-common: Link Dolby Atmos dependencies against v33 libstagefright_foundation
+99a3442 sm8150-common: Build XiaomiDolby
+d1f0251 sm8150-common: Import Dolby audio blobs and sepolicy
+11e7981 sm8150-common: Add missing stagefright libraries
+be4621f sm8150-common: Import media_codecs_system_default.xml

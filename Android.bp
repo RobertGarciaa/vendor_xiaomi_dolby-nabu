@@ -1,0 +1,291 @@
+//
+// Copyright (C) 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+// Dolby Atmos (Nabu HyperOS hardware DAP) vendor components.
+//
+// Blob provenance is recorded in proprietary-files.txt and README.md.
+// The nabu effects factory runs in the 32-bit audio HAL service. Ship
+// both ABIs for DAP and its client dependencies; DMS itself remains 64-bit.
+// Keep the device audio HAL unchanged.
+//
+
+soong_namespace {
+}
+
+cc_prebuilt_library_shared {
+    name: "libdapparamstorage",
+    owner: "xiaomi",
+    strip: {
+        none: true,
+    },
+    target: {
+        android: {
+            shared_libs: [
+                "libcutils",
+                "libutils",
+                "liblog",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    arch: {
+        arm: {
+            srcs: ["proprietary/vendor/lib/libdapparamstorage.so"],
+        },
+        arm64: {
+            srcs: ["proprietary/vendor/lib64/libdapparamstorage.so"],
+        },
+    },
+    compile_multilib: "both",
+    prefer: true,
+    soc_specific: true,
+}
+
+cc_prebuilt_library_shared {
+    name: "libdlbdsservice",
+    owner: "xiaomi",
+    strip: {
+        none: true,
+    },
+    target: {
+        android: {
+            srcs: [
+                ":nabu_dms_compat_consumer",
+            ],
+            shared_libs: [
+                "libutils",
+                "libsf_dolby_nabu",
+                "liblog",
+                "libxml2",
+                "libcrypto",
+                "libdapparamstorage",
+                "libsqlite",
+                "libhidlbase",
+                "vendor.dolby.hardware.dms@2.0",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    compile_multilib: "64",
+    prefer: true,
+    soc_specific: true,
+}
+
+cc_prebuilt_library_shared {
+    name: "vendor.dolby.hardware.dms@2.0",
+    owner: "xiaomi",
+    strip: {
+        none: true,
+    },
+    target: {
+        android: {
+            shared_libs: [
+                "libhidlbase",
+                "liblog",
+                "libutils",
+                "libcutils",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    arch: {
+        arm: {
+            srcs: ["proprietary/vendor/lib/vendor.dolby.hardware.dms@2.0.so"],
+        },
+        arm64: {
+            srcs: ["proprietary/vendor/lib64/vendor.dolby.hardware.dms@2.0.so"],
+        },
+    },
+    compile_multilib: "both",
+    prefer: true,
+    soc_specific: true,
+}
+
+cc_prebuilt_library_shared {
+    name: "vendor.dolby.hardware.dms@2.0-impl",
+    owner: "xiaomi",
+    strip: {
+        none: true,
+    },
+    target: {
+        android: {
+            srcs: [
+                "proprietary/vendor/lib64/vendor.dolby.hardware.dms@2.0-impl.so",
+            ],
+            shared_libs: [
+                "libhidlbase",
+                "libutils",
+                "liblog",
+                "libdapparamstorage",
+                "libdlbdsservice",
+                "vendor.dolby.hardware.dms@2.0",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    compile_multilib: "64",
+    prefer: true,
+    soc_specific: true,
+}
+
+cc_prebuilt_library_shared {
+    name: "libhwdap",
+    owner: "xiaomi",
+    strip: {
+        none: true,
+    },
+    target: {
+        android: {
+            shared_libs: [
+                "liblog",
+                "libutils",
+                "libcutils",
+                "libaudioutils",
+                "libdapparamstorage",
+                "libhidlbase",
+                "vendor.dolby.hardware.dms@2.0",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    arch: {
+        arm: {
+            srcs: ["proprietary/vendor/lib/soundfx/libhwdap.so"],
+        },
+        arm64: {
+            srcs: ["proprietary/vendor/lib64/soundfx/libhwdap.so"],
+        },
+    },
+    compile_multilib: "both",
+    relative_install_path: "soundfx",
+    prefer: true,
+    soc_specific: true,
+}
+
+cc_prebuilt_binary {
+    name: "vendor.dolby.hardware.dms@2.0-service",
+    owner: "xiaomi",
+    vintf_fragments: ["proprietary/vendor/etc/vintf/manifest/manifest_vendor.dolby.hardware.dms.xml"],
+    target: {
+        android: {
+            srcs: [
+                "proprietary/vendor/bin/hw/vendor.dolby.hardware.dms@2.0-service",
+            ],
+            shared_libs: [
+                "liblog",
+                "libutils",
+                "libhidlbase",
+                "libdapparamstorage",
+                "libdlbdsservice",
+                "vendor.dolby.hardware.dms@2.0",
+                "vendor.dolby.hardware.dms@2.0-impl",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    compile_multilib: "64",
+    strip: {
+        none: true,
+    },
+    prefer: true,
+    relative_install_path: "hw",
+    soc_specific: true,
+}
+
+prebuilt_etc {
+    name: "dolby-dax-default.xml",
+    owner: "xiaomi",
+    src: "proprietary/vendor/etc/dolby/dax-default.xml",
+    filename: "dax-default.xml",
+    sub_dir: "dolby",
+    soc_specific: true,
+}
+
+prebuilt_etc {
+    name: "vendor.dolby.hardware.dms@2.0-service.rc",
+    owner: "xiaomi",
+    src: "configs/init/dolby.rc",
+    filename: "vendor.dolby.hardware.dms@2.0-service.rc",
+    sub_dir: "init",
+    soc_specific: true,
+}
+
+// Nabu MiSound with MIUI compatibility shims, prepared by tools/import-misound.sh.
+android_app_import {
+    name: "MiSound",
+    owner: "xiaomi",
+    apk: "proprietary/ported/product/app/MiSound/MiSound.apk",
+    certificate: "platform",
+    privileged: false,
+    dex_preopt: {
+        enabled: false,
+    },
+    // The APK already contains a patched classes.dex and a shim classes2.dex;
+    // preopting a hand-patched multidex APK adds risk without benefit.
+    presigned: false,
+    product_specific: true,
+}
+
+// DMS was built against AHandler's VNDK30 layout. Isolate its original
+// provider instead of letting Android 17 write new fields into the old object.
+python_binary_host {
+    name: "nabu_dms_foundation_fixup",
+    main: "tools/dms_foundation_compat.py",
+    srcs: ["tools/dms_foundation_compat.py"],
+}
+
+genrule {
+    name: "nabu_dms_compat_consumer",
+    tools: ["nabu_dms_foundation_fixup"],
+    srcs: ["proprietary/vendor/lib64/libdlbdsservice.so"],
+    out: ["libdlbdsservice.so"],
+    cmd: "$(location nabu_dms_foundation_fixup) --mode consumer --input $(in) --output $(out)",
+}
+
+genrule {
+    name: "nabu_dms_compat_provider",
+    tools: ["nabu_dms_foundation_fixup"],
+    srcs: ["proprietary/compat/vndk30/lib64/libstagefright_foundation.so"],
+    out: ["libsf_dolby_nabu.so"],
+    cmd: "$(location nabu_dms_foundation_fixup) --mode provider --input $(in) --output $(out)",
+}
+
+cc_prebuilt_library_shared {
+    name: "libsf_dolby_nabu",
+    owner: "xiaomi",
+    srcs: [":nabu_dms_compat_provider"],
+    shared_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+    compile_multilib: "64",
+    strip: {
+        none: true,
+    },
+    prefer: true,
+    soc_specific: true,
+}

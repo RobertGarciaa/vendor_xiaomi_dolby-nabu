@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2026 The LineageOS Project -->
+<resources>
+    <string name="dolby_title">Dolby Atmos</string>
+    <string name="dolby_summary">프로필, 이퀄라이저 및 서라운드 향상</string>
+    <string name="dolby_keywords">돌비,애트모스,소리,음향,이퀄라이저,서라운드,프로필</string>
+    <string name="dolby_unavailable">사용할 수 없음</string>
+    <string name="misound_missing">이 빌드에는 MiSound가 설치되어 있지 않습니다</string>
+    <string name="profile_dynamic">다이내믹</string>
+    <string name="profile_movie">영화</string>
+    <string name="profile_music">음악</string>
+    <string name="profile_voice">음성</string>
+    <string name="dolby_profile">사운드 프로필</string>
+    <string name="dolby_equalizer">그래픽 이퀄라이저</string>
+    <string name="dolby_equalizer_summary">돌비 프리셋과 사용자 지정 이퀄라이저 조정</string>
+    <string name="dolby_capability_unavailable">돌비 지원 정보를 읽을 수 없습니다. 일치하는 ROM 정책이 필요합니다.</string>
+</resources>
