@@ -1,1 +1,4 @@
 ro.vendor.touchfeature.type u:object_r:vendor_nabu_touch_config_prop:s0 exact int
+persist.vendor.nabu.input.pen u:object_r:vendor_nabu_input_control_prop:s0 exact enum 0 1
+persist.vendor.nabu.input.pen_gen2 u:object_r:vendor_nabu_input_control_prop:s0 exact enum 0 1
+persist.vendor.nabu.input.keyboard u:object_r:vendor_nabu_input_control_prop:s0 exact enum enable_keyboard disable_keyboard

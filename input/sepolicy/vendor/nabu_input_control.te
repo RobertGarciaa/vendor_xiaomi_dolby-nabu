@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+# Only vendor init writes these kernel controls. Apps receive no sysfs access.
+type vendor_sysfs_nabu_pen, fs_type, sysfs_type;
+type vendor_sysfs_nabu_keyboard, fs_type, sysfs_type;
+allow vendor_init vendor_sysfs_nabu_pen:file rw_file_perms;
+allow vendor_init vendor_sysfs_nabu_keyboard:file rw_file_perms;
+
+vendor_internal_prop(vendor_nabu_input_control_prop)
+set_prop(vendor_init, vendor_nabu_input_control_prop)

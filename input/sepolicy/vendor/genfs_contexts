@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Exact files, preserving the common tree's label on the touchpanel directory.
+genfscon sysfs /touchpanel/pen u:object_r:vendor_sysfs_nabu_pen:s0
+genfscon sysfs /touchpanel/pen_gen2_force u:object_r:vendor_sysfs_nabu_pen:s0
+genfscon sysfs /devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status u:object_r:vendor_sysfs_nabu_keyboard:s0

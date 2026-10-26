@@ -23,7 +23,8 @@ PixelOS에서도 같은 위치에 “스타일러스 & 키보드”로 연결합
 - 원본 BluetoothExtension의 주 DEX·펌웨어 assets를 유지한 별도 앱에 원본
   StylusOtaService/MiuiBleOobHelperService/MiuiKeyboardOobService만 노출합니다.
   AOSP Bluetooth 스택과 shared UID를 대체하지 않습니다. 원본 ITouchFeature
-  HIDL 어댑터와 nabu TouchFeature HAL, 전용 SELinux 도메인을 함께 제공합니다.
+  HIDL 어댑터와 전용 SELinux 도메인을 포함합니다. 스톡 TouchFeature HAL은
+  현재 crDroid 커널과 맞지 않아 기본 설치에서 제외하며, 완전한 HAL 대체는 미구현입니다.
 - 필기 토글은 실제 AOSP STYLUS_HANDWRITING_ENABLED, 마우스 자연 스크롤과
   터치패드 탭은 실제 AOSP 설정으로 연결합니다. 다른 MIUI 서비스가 없는 기능은
   지원한다고 가장하지 않습니다.
@@ -73,3 +74,6 @@ nabu에서 검증해야 합니다. 보수적 도달성 조사에는 구형 miui.
 다른 모델 전용 단축키 type 9 이상과 MIUI 전용 자유 창은 지원하지 않습니다.
 
 전체 ROM/실기기 검증 전 상태는 포팅 후보입니다. Dolby Vision은 별도로 미완료입니다.
+
+현재 crDroid 커널의 부팅 활성화와 저장된 vendor 상태 적용은
+[첫 단계 구현](crdroid-input-bootstrap.md)을 참고하세요. 원본 앱의 하드웨어 토글은 아직 추가하지 않았습니다.

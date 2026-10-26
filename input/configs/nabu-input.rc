@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: Apache-2.0
+# crDroid nabu kernel ABI. Persisted choices override the first-boot defaults.
+# Select firmware before enabling pen reports. No screen-cycle is forced here.
+on boot
+    write /sys/touchpanel/pen_gen2_force ${persist.vendor.nabu.input.pen_gen2:-0}
+    write /sys/touchpanel/pen ${persist.vendor.nabu.input.pen:-1}
+    write /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status ${persist.vendor.nabu.input.keyboard:-enable_keyboard}
+
+# Persistent properties are device-wide, independent of handwriting/IME settings.
+on property:persist.vendor.nabu.input.pen=0
+    write /sys/touchpanel/pen 0
+on property:persist.vendor.nabu.input.pen=1
+    write /sys/touchpanel/pen 1
+on property:persist.vendor.nabu.input.keyboard=disable_keyboard
+    write /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status disable_keyboard
+on property:persist.vendor.nabu.input.keyboard=enable_keyboard
+    write /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status enable_keyboard
+on property:persist.vendor.nabu.input.pen_gen2=0
+    write /sys/touchpanel/pen_gen2_force 0
+on property:persist.vendor.nabu.input.pen_gen2=1
+    write /sys/touchpanel/pen_gen2_force 1

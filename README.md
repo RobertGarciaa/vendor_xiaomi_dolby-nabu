@@ -11,6 +11,8 @@ PixelOS 설정에 추가합니다. 원본 MiuiInputSettings APK와 nabu 리소�
 유지하며 Android 17 프레임워크 단축키 처리와 원본 Bluetooth OTA 서비스의
 호환 포팅을 포함합니다. 재현 방법, 적용 패치, 실제 이식 범위와 남은 의존성은
 [입력 기능 포팅 문서](docs/input-port.md), [검증 기록](docs/input-validation.md)을 보세요.
+현재 crDroid 커널에 맞춘 부팅 활성화와 HAL 기본 제외는
+[입력 활성화 첫 단계](docs/crdroid-input-bootstrap.md)에 정리했습니다.
 
 ## 원본과 적용 범위
 
