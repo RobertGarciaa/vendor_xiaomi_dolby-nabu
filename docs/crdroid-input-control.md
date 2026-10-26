@@ -52,7 +52,7 @@ python3 tools/check-input-policy.py --android-root /path/to/pixelos --build-vari
   생성된 HIDL transport/types 컴파일 통과.
 - 참조 ARM64 라이브러리와 --no-undefined 결합 공유 라이브러리 링크 검사 통과.
   전체 Soong 제품 빌드나 실제 서비스 실행 검증은 아닙니다.
-- APK 원본 페이로드 보존, 서명/16KB 정렬, DEX 무결성과 호환 API 참조 199개 검사 통과.
+- APK 원본 페이로드 보존, 서명/16KB 정렬, DEX 무결성과 호환 API 참조 검사 통과.
 - init 문법, VINTF manifest/matrix, Android.bp 파싱, genfs를 포함한 SELinux
   neverallow 및 property/hwservice context 검사 통과.
   정책 검사는 참조 제품에 nabu의 QCOM legacy 배터리 타입 선언을 더한 결합 검사입니다.
@@ -60,9 +60,28 @@ python3 tools/check-input-policy.py --android-root /path/to/pixelos --build-vari
 
 ## 남은 입력 작업
 
-원본 앱의 SPI 펜 인식과 연결 표시, 표준 펜 버튼과 단축키 정책의 연결,
+원본 앱의 SPI 펜 인식과 연결 표시,
 TouchFeature mode 22 등의 실제 전송 지원, 게임 모드/2세대 상호 동작,
 USB OEM 인증·벤더 보고서·펌웨어 업데이트는 미완료입니다.
 현재 스톡 TouchFeature HAL은 기본 제외 상태입니다. 이 새 제어 서비스가 OTA/OOB
 호출 전체를 대체했다고 보아서는 안 됩니다. 충전 알림이나 원본 배터리 UI로의 연결도
 현재 하드웨어 제어 화면의 측정값 조회와는 별도 후속 작업입니다.
+
+## 현재 사용자별 펜 버튼 설정
+
+하드웨어 제어 화면에서 기본/보조 펜 버튼의 길게 누르기를 각각
+Android 기본 동작(기본값), 빠른 노트, 영역 캡처 중 선택할 수 있습니다.
+이 선택은 현재 사용자별 Secure 설정에 저장하며 하드웨어의 기기 전체 설정과 구분합니다.
+추가 플랫폼 패치 0005가 있어야 설정이 동작합니다.
+
+현재 커널의 NVTCapacitivePen, VID/PID 0/0, SOURCE_STYLUS와 표준 펜 키 코드에
+한정해 PWM queue 단계에서 처리합니다. KeyGestureController 단계까지 이 키를
+강제로 전달하지 않습니다. Android 기본값은 기존 처리를 그대로 수행합니다.
+사용자가 다른 동작을 선택한 경우 380ms 뒤 노트/영역 캡처를 실행하며, 짧은 누르기는
+원래 StatusBar 전달 경로에 down/up을 전달합니다. 앱으로 향하는 펜 MotionEvent를
+변경하거나 연결/세대 값을 꾸며내지 않습니다. 사용자 전환·장치 제거·취소 시 대기를 정리합니다.
+
+변경된 PhoneWindowManager/KeyGestureController/NabuInputPolicy를 함께 컴파일하고
+기존 0004 다음 0005 메일 패치를 임시 저장소에 적용해 확인했습니다. 실제 버튼 동작과
+길게 누르는 동안 필기 앱에 미치는 영향은 기기 검증이 남아 있습니다. 빠른 노트는
+호환 노트 앱이 설치되어 있어야 합니다.

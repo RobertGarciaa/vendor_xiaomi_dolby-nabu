@@ -77,3 +77,6 @@ nabu에서 검증해야 합니다. 보수적 도달성 조사에는 구형 miui.
 
 현재 crDroid 커널의 부팅 활성화와 저장된 vendor 상태 적용은
 [첫 단계 구현](crdroid-input-bootstrap.md)을 참고하세요. 현재 [원본 앱의 하드웨어 제어 메뉴](crdroid-input-control.md)에 사용 여부·세대 선택과 저장을 연결했습니다.
+
+crDroid 표준 펜 버튼의 선택 가능한 길게 누르기는 extraPatches의 framework 패치
+0005와 하드웨어 제어 메뉴를 함께 사용합니다. 기본값은 Android 처리를 유지합니다.

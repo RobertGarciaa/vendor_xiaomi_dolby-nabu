@@ -39,6 +39,8 @@ public final class NabuInputPolicy {
     private final Handler handler;
     private final boolean enabled=SystemProperties.getBoolean("ro.nabu.input_port",false);
     private final Map<Long,Pending> stylus=new HashMap<>();
+    private final Map<Long,NativePending> nativeButtons=new HashMap<>();
+    private volatile int primaryAction, secondaryAction;
     private final java.util.Set<Long> consumed=new java.util.HashSet<>();
     private volatile Map<Long,JSONObject> shortcuts=Map.of();
     private volatile int user;
@@ -51,10 +53,14 @@ public final class NabuInputPolicy {
         user=ActivityManager.getCurrentUser();
         context.getContentResolver().registerContentObserver(Settings.Secure.getUriFor(KEY),false,
                 new ContentObserver(handler){@Override public void onChange(boolean self){reload();}},UserHandle.USER_ALL);
+        for(String key:new String[]{"nabu_stylus_primary_action","nabu_stylus_secondary_action"})
+            context.getContentResolver().registerContentObserver(Settings.Secure.getUriFor(key),false,
+                    new ContentObserver(handler){@Override public void onChange(boolean self){reload();}},UserHandle.USER_ALL);
         context.registerReceiver(new BroadcastReceiver(){@Override public void onReceive(Context c,Intent i){
-            shortcuts=Map.of();shortcutsEffective=true;
+            shortcuts=Map.of();shortcutsEffective=true;primaryAction=secondaryAction=0;
             synchronized(consumed){consumed.clear();}
             synchronized(stylus){for(Pending p:stylus.values())handler.removeCallbacks(p);stylus.clear();}
+            synchronized(nativeButtons){for(NativePending p:nativeButtons.values())handler.removeCallbacks(p);nativeButtons.clear();}
             user=i.getIntExtra(Intent.EXTRA_USER_HANDLE,UserHandle.USER_SYSTEM);reload();
         }},new IntentFilter(Intent.ACTION_USER_SWITCHED),null,handler);
         context.getContentResolver().registerContentObserver(Settings.System.getUriFor("is_custom_shortcut_effective"),false,
@@ -64,6 +70,7 @@ public final class NabuInputPolicy {
             @Override public void onInputDeviceChanged(int id) {}
             @Override public void onInputDeviceRemoved(int id) {
                 synchronized(stylus){stylus.entrySet().removeIf(entry->{if((int)(entry.getKey()>>32)!=id)return false;handler.removeCallbacks(entry.getValue());return true;});}
+                synchronized(nativeButtons){nativeButtons.entrySet().removeIf(entry->{if((int)(entry.getKey()>>32)!=id)return false;handler.removeCallbacks(entry.getValue());return true;});}
                 synchronized(consumed){consumed.removeIf(key->(int)(key>>32)==id);}
             }
         },handler);
@@ -72,6 +79,8 @@ public final class NabuInputPolicy {
     private void reload() {
         Map<Long,JSONObject> next=new HashMap<>();
         try {
+            primaryAction=readNativeAction("nabu_stylus_primary_action");
+            secondaryAction=readNativeAction("nabu_stylus_secondary_action");
             shortcutsEffective=Settings.System.getIntForUser(context.getContentResolver(),"is_custom_shortcut_effective",1,user)!=0;
             String json=Settings.Secure.getStringForUser(context.getContentResolver(),KEY,user);
             if(json==null)json=java.nio.file.Files.readString(java.nio.file.Path.of("/system_ext/etc/nabu-input/shortcuts.json"));
@@ -173,13 +182,63 @@ public final class NabuInputPolicy {
             if(context.getSystemService(KeyguardManager.class).isKeyguardLocked()||!context.getSystemService(PowerManager.class).isInteractive())return;
             if(down.getKeyCode()==KeyEvent.KEYCODE_PAGE_UP)regionalScreenshot(user);
             else {
+                launchNote(user);
+            }
+        }
+    }
+    private void launchNote(int requestedUser) {
                 Intent note=new Intent("android.intent.action.CREATE_NOTE").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 Intent stock=new Intent("com.miui.pad.notes.action.INSERT_OR_EDIT").setPackage("com.miui.notes")
                     .setType("vnd.android.cursor.item/text_note").putExtra("shortcut","stylus")
                     .putExtra("scene","app").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                try{context.startActivityAsUser(stock,UserHandle.of(user));}
-                catch(RuntimeException absent){try{context.startActivityAsUser(note,UserHandle.of(user));}catch(RuntimeException failure){Log.e(TAG,"No compatible notes application",failure);}}
+                try{context.startActivityAsUser(stock,UserHandle.of(requestedUser));}
+                catch(RuntimeException absent){try{context.startActivityAsUser(note,UserHandle.of(requestedUser));}catch(RuntimeException failure){Log.e(TAG,"No compatible notes application",failure);}}
+    }
+    private int readNativeAction(String key) {
+        int value=Settings.Secure.getIntForUser(context.getContentResolver(),key,0,user);
+        return value>=0&&value<=2?value:0;
+    }
+    private static boolean isNabuNativeButton(KeyEvent e) {
+        InputDevice d=e.getDevice();
+        return d!=null&&!d.isVirtual()&&d.getVendorId()==0&&d.getProductId()==0
+                &&"NVTCapacitivePen".equals(d.getName())&&d.supportsSource(InputDevice.SOURCE_STYLUS)
+                &&(e.getKeyCode()==KeyEvent.KEYCODE_STYLUS_BUTTON_PRIMARY||e.getKeyCode()==KeyEvent.KEYCODE_STYLUS_BUTTON_SECONDARY);
+    }
+    /** PWM owns native stylus keys at queueing time, before KeyGestureController. */
+    public boolean interceptNativeStylusKey(KeyEvent e,boolean buttonsEnabled,java.util.function.Consumer<KeyEvent> shortDelivery) {
+        if(!enabled||!isNabuNativeButton(e))return false;
+        long id=((long)e.getDeviceId()<<32)|(e.getKeyCode()&0xffffffffL);
+        synchronized(nativeButtons) {
+            NativePending pending=nativeButtons.get(id);
+            if(pending!=null) {
+                if(e.getAction()==KeyEvent.ACTION_UP||e.isCanceled()) {
+                    nativeButtons.remove(id);handler.removeCallbacks(pending);
+                    if(!pending.triggered&&!e.isCanceled()&&buttonsEnabled&&pending.user==user) {
+                        KeyEvent up=new KeyEvent(e);
+                        handler.post(()->{if(pending.user==user){pending.delivery.accept(pending.down);pending.delivery.accept(up);}});
+                    }
+                }
+                return true;
             }
+            int action=e.getKeyCode()==KeyEvent.KEYCODE_STYLUS_BUTTON_PRIMARY?primaryAction:secondaryAction;
+            if(action==0||!buttonsEnabled||e.getAction()!=KeyEvent.ACTION_DOWN||e.getRepeatCount()!=0||e.isCanceled()
+                    ||context.getSystemService(KeyguardManager.class).isKeyguardLocked()
+                    ||!context.getSystemService(PowerManager.class).isInteractive())return false;
+            NativePending next=new NativePending(new KeyEvent(e),user,action,shortDelivery);
+            nativeButtons.put(id,next);handler.postDelayed(next,380);return true;
+        }
+    }
+    private final class NativePending implements Runnable {
+        final KeyEvent down;final int user,action;final java.util.function.Consumer<KeyEvent> delivery;
+        volatile boolean triggered;
+        NativePending(KeyEvent down,int user,int action,java.util.function.Consumer<KeyEvent> delivery){this.down=down;this.user=user;this.action=action;this.delivery=delivery;}
+        @Override public void run() {
+            synchronized(nativeButtons){if(!nativeButtons.containsValue(this))return;triggered=true;}
+            if(user!=NabuInputPolicy.this.user||InputDevice.getDevice(down.getDeviceId())==null
+                    ||context.getSystemService(KeyguardManager.class).isKeyguardLocked()
+                    ||!context.getSystemService(PowerManager.class).isInteractive()
+                    ||Settings.Secure.getIntForUser(context.getContentResolver(),Settings.Secure.STYLUS_BUTTONS_ENABLED,1,user)==0)return;
+            if(action==1)launchNote(user);else if(action==2)regionalScreenshot(user);
         }
     }
     private void regionalScreenshot(int requestedUser) {

@@ -9,9 +9,10 @@ struct Fake final : nabu::Backend {
     std::map<std::string,std::string> props;
     std::vector<std::pair<std::string,std::string>> writes;
     bool failWrite=false, failSave=false, ignoreWrite=false;
+    int attempts=0, failOnAttempt=-1;
     bool read(const std::string& path,std::string& out) override { auto i=files.find(path);if(i==files.end())return false;out=i->second;return true; }
     bool write(const std::string& path,const std::string& value) override {
-        if(failWrite)return false;writes.emplace_back(path,value);
+        if(++attempts==failOnAttempt||failWrite)return false;writes.emplace_back(path,value);
         if(!ignoreWrite && path!=nabu::kKeyboard)files[path]=value;
         return true;
     }
@@ -33,6 +34,9 @@ int main() {
     b.failSave=false;b.ignoreWrite=true;assert(nabu::setControl(b,0,1)==-EIO && b.props[nabu::kProps[0]]=="0");
     b.ignoreWrite=false;b.failWrite=true;assert(nabu::setControl(b,1,0)==-EIO && nabu::readState(b)[1]==1);
     b.failWrite=false;b.files.erase(nabu::kPen);assert(nabu::setControl(b,0,1)==-ENODEV && nabu::readState(b)[0]==-1);
+    Fake rollback;
+    rollback.failSave=true;rollback.failOnAttempt=2;
+    assert(nabu::setControl(rollback,0,0)==-EREMOTEIO && nabu::readState(rollback)[0]==0);
     b.files["/sys/class/power_supply/idt/reverse_pen_soc"]="255\n";
     b.files["/sys/class/power_supply/idt/reverse_iout"]="0\n";
     s=nabu::readState(b);assert(s[4]==-1 && s[5]==0);

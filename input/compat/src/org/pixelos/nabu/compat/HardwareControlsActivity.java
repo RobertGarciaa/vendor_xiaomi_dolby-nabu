@@ -37,14 +37,35 @@ public final class HardwareControlsActivity extends Activity {
             button.setOnCheckedChangeListener((view, checked) -> { if (!updating) change(control, checked); });
             controls[i] = button; layout.addView(button);
         }
+        addButtonSetting(layout, tr("기본 펜 버튼 길게 누르기", "Primary pen button long press"), "nabu_stylus_primary_action");
+        addButtonSetting(layout, tr("보조 펜 버튼 길게 누르기", "Secondary pen button long press"), "nabu_stylus_secondary_action");
         TextView explanation = new TextView(this);
-        explanation.setText(tr("설정은 기기 전체에 적용됩니다. 2세대 펌웨어 변경 후 화면을 껐다 켜야 반영될 수 있습니다. 게임 모드는 펌웨어 선택에 영향을 줄 수 있습니다.",
-            "These settings affect the whole device. Generation 2 firmware may require a screen off/on cycle. Game mode can affect firmware selection."));
+        explanation.setText(tr("하드웨어 스위치는 기기 전체에, 버튼 동작은 현재 사용자에게 적용됩니다. 버튼의 짧은 누르기와 앱의 펜 모션 버튼은 유지합니다. 2세대 펌웨어 변경 후 화면을 껐다 켜야 반영될 수 있습니다. 게임 모드는 펌웨어 선택에 영향을 줄 수 있습니다.",
+            "Hardware switches affect the whole device; button actions apply to the current user. Short presses and app pen motion buttons are preserved. Generation 2 firmware may require a screen off/on cycle. Game mode can affect firmware selection."));
         layout.addView(explanation);
         status = new TextView(this); status.setPadding(0, pad, 0, pad); layout.addView(status);
         android.widget.Button refresh = new android.widget.Button(this);
         refresh.setText(tr("상태 새로고침", "Refresh status")); refresh.setOnClickListener(view -> { if (!busy) refresh(); }); layout.addView(refresh);
         ScrollView scroll = new ScrollView(this); scroll.addView(layout); setContentView(scroll);
+    }
+    private void addButtonSetting(LinearLayout layout, String title, String key) {
+        TextView label = new TextView(this); label.setText(title); layout.addView(label);
+        android.widget.Spinner choices = new android.widget.Spinner(this);
+        String[] entries = {tr("Android 기본 동작", "Android default"), tr("빠른 노트", "Quick note"), tr("영역 캡처", "Regional screenshot")};
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<>(this, android.R.layout.simple_spinner_item, entries);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); choices.setAdapter(adapter);
+        int value = android.provider.Settings.Secure.getInt(getContentResolver(), key, 0);
+        final int[] saved = {value >= 0 && value <= 2 ? value : 0};
+        choices.setSelection(saved[0]);
+        choices.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, android.view.View view, int position, long id) {
+                if (position == saved[0]) return;
+                if (android.provider.Settings.Secure.putInt(getContentResolver(), key, position)) saved[0] = position;
+                else { choices.setSelection(saved[0]); Toast.makeText(HardwareControlsActivity.this, tr("버튼 설정을 저장하지 못했습니다.", "Could not save button setting."), Toast.LENGTH_LONG).show(); }
+            }
+        });
+        layout.addView(choices);
     }
     @Override public void onResume() { super.onResume(); if (!busy) refresh(); }
     private void refresh() { submit(-1, false); }
