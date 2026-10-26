@@ -3,6 +3,8 @@
 패드5(nabu) Global HyperOS **OS1.0.6.0.TKXMIXM / Android 13**의 Dolby Atmos를
 AOSP PixelOS Android 17에 통합하기 위한 저장소입니다. 전체 ROM 빌드와 실기기
 검증은 아직 수행하지 않았습니다. 현재 상태는 빌드 통합과 정적 검증을 마친 포팅 후보입니다.
+[부팅 관련 정적 점검](docs/boot-preflight-20261027.md)에 정책·속성·init·VINTF 검사와
+전체 nabu 빌드 전제 조건을 구분해 기록했습니다.
 
 ## 스타일러스·키보드
 
