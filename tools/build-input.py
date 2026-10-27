@@ -120,7 +120,7 @@ def main():
         run('apktool','d','-f','-s','-p',frames,'-o',decoded,raw)
         manifest=decoded/'AndroidManifest.xml';tree=ET.parse(manifest);root=tree.getroot();app=root.find('application')
         ET.register_namespace('android',NS)
-        for permission in ['android.permission.READ_FRAME_BUFFER','android.permission.WRITE_SECURE_SETTINGS']:
+        for permission in ['android.permission.READ_FRAME_BUFFER','android.permission.WRITE_SECURE_SETTINGS','android.permission.POST_NOTIFICATIONS']:
             ET.SubElement(root,'uses-permission',{f'{{{NS}}}name':permission})
         service=next(e for e in app.findall('service') if e.get(f'{{{NS}}}name')=='com.miui.miinput.service.MiuiInputSettingsService')
         service.set(f'{{{NS}}}permission','android.permission.STATUS_BAR_SERVICE')
@@ -134,6 +134,8 @@ def main():
             f'{{{NS}}}name':'org.pixelos.nabu.compat.HardwareControlsActivity',
             f'{{{NS}}}exported':'false',
             f'{{{NS}}}theme':'@android:style/Theme.DeviceDefault'})
+        ET.SubElement(app,'receiver',{f'{{{NS}}}name':'org.pixelos.nabu.compat.PenStatusReceiver',
+                                      f'{{{NS}}}exported':'false'})
         # Expose only the original stylus/keyboard screens, not unrelated MIUI gesture controls.
         for activity in app.findall('activity'):
             name=activity.get(f'{{{NS}}}name','')

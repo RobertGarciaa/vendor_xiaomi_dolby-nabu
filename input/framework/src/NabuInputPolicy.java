@@ -49,6 +49,7 @@ public final class NabuInputPolicy {
     NabuInputPolicy(Context context,Handler handler) {
         this.context=context;this.handler=handler;
         if(!enabled)return;
+        NabuPenStatusMonitor.start(context);
         LocalServices.addService(NabuInputPolicy.class,this);
         user=ActivityManager.getCurrentUser();
         context.getContentResolver().registerContentObserver(Settings.Secure.getUriFor(KEY),false,

@@ -4,6 +4,10 @@ ifeq ($(wildcard frameworks/base/services/core/java/com/android/server/policy/Na
 $(error Nabu input requires the nabu framework patch from vendor/extraPatches branch seventeen_nabu)
 endif
 
+ifeq ($(wildcard frameworks/base/services/core/java/com/android/server/policy/NabuPenStatusMonitor.java),)
+$(error Nabu pen notifications require framework patch 0007 from vendor/extraPatches)
+endif
+
 PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu
 PRODUCT_PACKAGES += \
     NabuMiuiInputSettings \

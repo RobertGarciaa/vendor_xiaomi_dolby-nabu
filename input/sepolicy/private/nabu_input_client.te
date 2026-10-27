@@ -2,3 +2,6 @@
 # Original MiuiInputSettings uses android.uid.system; UID is also enforced by HAL.
 hwbinder_use(system_app)
 hal_client_domain(system_app, hal_nabu_input_control)
+
+# Event-driven charging telemetry is read off the policy/main threads.
+hal_client_domain(system_server, hal_nabu_input_control)

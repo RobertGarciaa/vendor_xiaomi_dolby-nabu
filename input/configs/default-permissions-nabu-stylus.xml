@@ -4,4 +4,7 @@
         <permission name="android.permission.BLUETOOTH_SCAN" fixed="true" />
         <permission name="android.permission.BLUETOOTH_ADVERTISE" fixed="true" />
     </exception>
+    <exception package="com.miui.miinput">
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="false" />
+    </exception>
 </exceptions>

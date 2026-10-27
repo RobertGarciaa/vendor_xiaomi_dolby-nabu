@@ -46,6 +46,8 @@ if r.returncode == 0:
  # A deliberately inverse neverallow must fail on the exact required allow.
  analyzer=root/'out/host/linux-x86/bin/sepolicy-analyze'
  required=[
+  ('system_server','hal_nabu_input_control_hwservice','hwservice_manager','find'),
+  ('system_server','hal_nabu_input_control_default','binder','call'),
   ('vendor_init','vendor_sysfs_nabu_pen','file','setattr'),
   ('vendor_init','vendor_sysfs_nabu_keyboard','file','setattr'),
   ('vendor_init','vendor_sysfs_nabu_pen','file','write'),

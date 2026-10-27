@@ -17,8 +17,9 @@ status values. Deploy the new app and generated control HAL together. The app
 invalidates a measurement if its later status query no longer shows that link.
 The original settings app's overflow menu includes the status; hardware controls
 refresh every two seconds while resumed, without a background polling service.
-No app receives direct sysfs access and no new write or SELinux permission is
-introduced. This does not yet feed the original stock battery notification code.
+No app receives direct sysfs access. The background monitor uses the same
+read-only HIDL measurements through system_server, with an explicit HAL-client
+policy rule. It does not write hardware state.
 
 SmartDevil's non-Bluetooth capacitive pen uses ordinary touch input. There is no
 identified telemetry path for its battery, identity, or presence. Dedicated pen
@@ -33,3 +34,32 @@ signed APK resource/API verification passed. No full product build or physical
 Xiaomi pen test was performed. The stock driver's I2C reads do not propagate all
 errors; this userspace gate cannot prove every sampled SOC is fresh. Two reads
 also cannot detect an entire detach/reattach occurring between samples.
+
+## Background notifications
+
+Framework patch 0007 starts a product-gated power-supply UEventObserver with a
+separate HandlerThread for HIDL reads. It samples after boot/unlock, user switch,
+locale changes and IDT/wireless events. Only receiver-ready charging links poll
+at ten-second intervals, because IDT can update cached SOC without a uevent.
+Missing HAL has at most five bootstrap attempts separated by thirty seconds;
+idle capacitive pens have no periodic timer. Fresh power/user events can retry.
+
+A private, non-exported receiver in the original settings APK posts a low-priority
+notification only for a gated SOC of 0..100. Inactive/fault/missing/invalid data
+cancels it, rather than retaining a stale percentage or declaring Bluetooth
+disconnection. No notification is created for a SmartDevil capacitive pen.
+Tapping opens the stock stylus/keyboard screen. The notification uses Korean or
+English, respects notification settings, and requests POST_NOTIFICATIONS through
+an initial non-fixed default grant. It must not override a user's denial.
+
+User-locked accounts are sampled but not sent app broadcasts until unlocked;
+user changes clear the old user's notification and refresh the current user's
+state. Status broadcasts contain only a battery reading (or cancellation), not
+stylus presence. Delivery is asynchronous, and a stopped/crashed original app
+cannot be considered a proven receiver. Device verification must check boot,
+HAL restart, detach, user switch and notification permission/channel changes.
+
+The monitor/receiver compile against current platform APIs. APK build/signing,
+byte-identical original resources, exact compatibility references, patch-chain
+application and combined-reference SELinux checks are host validation only.
+No full nabu ROM build or genuine Xiaomi pen runtime validation has occurred.
