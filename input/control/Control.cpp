@@ -17,13 +17,24 @@ static int measured(Backend& b, const char* path, int minimum, int maximum) {
     std::string data;
     return b.read(path, data) ? integer(data, minimum, maximum) : -1;
 }
+std::array<int, 2> readPenChargingState(Backend& b) {
+    return {measured(b, kChargingMode, 0, 1), measured(b, kChargingState, 0, 5)};
+}
 std::array<int, 6> readState(Backend& b) {
     auto requested = b.property(kProps[2], "enable_keyboard");
+    // idtp9418 returns a fabricated 50% with reverse mode off. State 4 is
+    // receiver-ready in this kernel; neither a Hall magnet nor TX mode alone
+    // establishes a communicating pen. Recheck both after reading measurements.
+    auto before = readPenChargingState(b);
+    int battery = -1, current = -1;
+    if (before[0] == 1 && before[1] == 4) {
+        battery = measured(b, "/sys/class/power_supply/idt/reverse_pen_soc", 0, 100);
+        current = measured(b, "/sys/class/power_supply/idt/reverse_iout", 0, INT_MAX);
+        if (readPenChargingState(b) != before) battery = current = -1;
+    }
     return {measured(b, kPen, 0, 1), measured(b, kGen2, 0, 1),
             requested == "enable_keyboard" ? 1 : requested == "disable_keyboard" ? 0 : -1,
-            measured(b, kKeyboard, 0, 1),
-            measured(b, "/sys/class/power_supply/idt/reverse_pen_soc", 0, 100),
-            measured(b, "/sys/class/power_supply/idt/reverse_iout", 0, INT_MAX)};
+            measured(b, kKeyboard, 0, 1), battery, current};
 }
 int setControl(Backend& b, int control, int value) {
     if (control < 0 || control > 2 || (value != 0 && value != 1)) return -EINVAL;

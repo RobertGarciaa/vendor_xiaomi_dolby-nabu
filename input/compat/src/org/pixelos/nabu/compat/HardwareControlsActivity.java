@@ -19,7 +19,11 @@ public final class HardwareControlsActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Switch[] controls = new Switch[3];
     private TextView status;
-    private boolean updating, busy;
+    private boolean updating, busy, resumed;
+    private final android.os.Handler pollHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable poll = new Runnable() {
+        @Override public void run() { if (resumed) { if (!busy) refresh(); pollHandler.postDelayed(this, 2000); } }
+    };
     private int[] state;
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
@@ -67,7 +71,8 @@ public final class HardwareControlsActivity extends Activity {
         });
         layout.addView(choices);
     }
-    @Override public void onResume() { super.onResume(); if (!busy) refresh(); }
+    @Override public void onResume() { super.onResume(); resumed = true; pollHandler.post(poll); }
+    @Override public void onPause() { resumed = false; pollHandler.removeCallbacks(poll); super.onPause(); }
     private void refresh() { submit(-1, false); }
     private void change(int control, boolean checked) { submit(control, checked); }
     private void submit(int control, boolean checked) {
@@ -98,11 +103,12 @@ public final class HardwareControlsActivity extends Activity {
         if (state == null) { status.setText(tr("상태를 읽는 중…", "Reading hardware state…")); return; }
         String unknown = tr("확인 불가", "Unavailable");
         status.setText(tr("키보드 연결: ", "Keyboard connection: ") + (state[3] < 0 ? unknown : state[3] == 1 ? tr("연결됨", "Connected") : tr("연결 안 됨", "Disconnected"))
-            + "\n" + tr("펜 배터리 측정값: ", "Pen battery reading: ") + (state[4] < 0 ? unknown : state[4] + "%")
-            + "\n" + tr("펜 충전 전류: ", "Pen charging current: ") + (state[5] < 0 ? unknown : state[5] + " mA")
-            + "\n" + tr("키보드 사용 스위치는 저장된 사용 설정을 표시합니다. 배터리·전류 값만으로 펜 연결 여부를 판단하지 않습니다.", "The keyboard switch shows the saved enable setting. Battery/current readings do not determine whether the pen is connected.")
+            + "\n" + HardwareControls.penSummary(state)
+            + "\n" + tr("정품 펜 배터리 측정값: ", "Xiaomi pen battery reading: ") + (state[4] < 0 ? unknown : state[4] + "%")
+            + "\n" + tr("펜 충전 회로 전류: ", "Pen charging circuit current: ") + (state[5] < 0 ? unknown : state[5] + " mA")
+            + "\n" + tr("충전 통신 상태는 Bluetooth 연결이나 일반 터치펜 감지를 의미하지 않습니다. SmartDevil 같은 Bluetooth 없는 터치펜은 일반 터치 입력을 사용하며, 이 메뉴에서 잔량·연결 여부를 확인할 수 없습니다. 하드웨어의 스타일러스·2세대 펌웨어 스위치는 정품 펜용입니다.", "The charging link is not Bluetooth pairing or generic pen detection. Non-Bluetooth capacitive pens such as SmartDevil use normal touch input; their battery and connection cannot be read here. The stylus and generation 2 firmware switches are for Xiaomi pens.")
             + (owner ? "" : "\n" + tr("기기 소유자만 설정을 변경할 수 있습니다.", "Only the device owner can change these settings.")));
     }
     @Override public boolean onOptionsItemSelected(MenuItem item) { if (item.getItemId() == android.R.id.home) { finish(); return true; } return super.onOptionsItemSelected(item); }
-    @Override public void onDestroy() { worker.shutdown(); super.onDestroy(); }
+    @Override public void onDestroy() { pollHandler.removeCallbacks(poll); worker.shutdown(); super.onDestroy(); }
 }

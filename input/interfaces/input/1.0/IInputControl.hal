@@ -6,4 +6,7 @@ interface IInputControl {
     // control: 0 = pen, 1 = generation-2 force, 2 = keyboard; value must be 0/1.
     // 0 = applied and persisted, negative errno = failure.
     setControl(int32_t control, int32_t value) generates (int32_t result);
+    // Added after transactions 1/2; existing State layout is unchanged.
+    // -1 means unavailable. These values describe the charging link only.
+    getPenChargingState() generates (int32_t mode, int32_t state);
 };

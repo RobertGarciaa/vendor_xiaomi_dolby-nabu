@@ -15,6 +15,10 @@ struct Backend {
     virtual bool save(const std::string& name, const std::string& value) = 0;
 };
 // Same field order as the HIDL State. Every missing/invalid measurement is -1.
+inline constexpr const char* kChargingMode = "/sys/class/power_supply/idt/reverse_chg_mode";
+inline constexpr const char* kChargingState = "/sys/class/power_supply/wireless/reverse_pen_chg_state";
+// Hardware charging link, not Bluetooth pairing or general stylus presence.
+std::array<int, 2> readPenChargingState(Backend& backend);
 std::array<int, 6> readState(Backend& backend);
 int setControl(Backend& backend, int control, int value);
 }

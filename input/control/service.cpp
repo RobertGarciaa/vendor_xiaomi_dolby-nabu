@@ -28,6 +28,13 @@ struct InputControl final : IInputControl {
         auto s = nabu::readState(backend);
         cb(State{s[0], s[1], s[2], s[3], s[4], s[5]}); return {};
     }
+    Return<void> getPenChargingState(getPenChargingState_cb cb) override {
+        std::lock_guard<std::mutex> lock(mutex);
+        auto uid = android::hardware::IPCThreadState::self()->getCallingUid();
+        if (uid % AID_USER_OFFSET != AID_SYSTEM) { cb(-1, -1); return {}; }
+        auto s = nabu::readPenChargingState(backend);
+        cb(s[0], s[1]); return {};
+    }
     Return<int32_t> setControl(int32_t control, int32_t value) override {
         // These are device-wide choices. Secondary users may inspect, but cannot change them.
         if (android::hardware::IPCThreadState::self()->getCallingUid() != AID_SYSTEM) return -EACCES;
