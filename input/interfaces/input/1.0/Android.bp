@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: Apache-2.0
+// HIDL derives type names from srcs; keep this module beside its HAL files.
+hidl_interface {
+    name: "vendor.pixelos.nabu.input@1.0",
+    root: "vendor.pixelos.nabu",
+    srcs: [
+        "types.hal",
+        "IInputControl.hal",
+    ],
+    interfaces: ["android.hidl.base@1.0"],
+    gen_java: false,
+}

@@ -410,17 +410,6 @@ hidl_package_root {
     path: "vendor/xiaomi/dolby-nabu/input/interfaces",
 }
 
-hidl_interface {
-    name: "vendor.pixelos.nabu.input@1.0",
-    root: "vendor.pixelos.nabu",
-    srcs: [
-        "input/interfaces/input/1.0/types.hal",
-        "input/interfaces/input/1.0/IInputControl.hal",
-    ],
-    interfaces: ["android.hidl.base@1.0"],
-    gen_java: false,
-}
-
 java_library {
     name: "nabu_keyboard_auth",
     srcs: ["input/usb/src/**/*.java"],
