@@ -35,3 +35,16 @@ Pad 5 stock hardware DAP으로 바로잡았다. 오디오 효과 UUID·파라미
 
 Dolby Vision 폐기, 스톡 TouchFeature HAL/OEM USB 인증 기본 미설치 방침은 유지한다.
 공통 디바이스 트리와 extraPatches는 이번 마무리에서 변경하지 않는다.
+
+## TouchFeature 설치 규칙 중복 수정
+
+사용자 user 빌드의 Kati 단계에서 vendor/lib{,64}/vendor.xiaomi.hardware.touchfeature@1.0.so
+설치 규칙 두 개가 충돌했다. hardware/xiaomi의 생성 HIDL 모듈과 이 저장소의
+nabu_touchfeature_interface prebuilt가 동일한 SONAME/설치 경로를 사용했기 때문이다.
+PRODUCT_PACKAGES에서 스톡 HAL을 제외하는 것만으로 Soong의 전역 설치 규칙 생성을
+막지 못한다. 원본 ABI 보관용 prebuilt에 installable: false를 지정해 설치 규칙을 없앤다.
+원본 blob, 스톡 DAX/Atmos 엔진, 현재 사용하는 nabu_input_control_service는 변경하지 않는다.
+
+이는 기본 비활성 스톡 TouchFeature HAL의 동작이나 ABI 호환성을 검증한 것이 아니다.
+향후 이 HAL을 활성화하려면 커널 ABI와 함께 전용 라이브러리 격리/설치 구성을 먼저
+완성해야 한다. 기존 hardware/xiaomi의 생성 라이브러리로 스톡 ABI 호환성을 가정하지 않는다.

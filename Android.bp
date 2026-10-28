@@ -318,6 +318,9 @@ android_app_import {
 
 cc_prebuilt_library_shared {
     name: "nabu_touchfeature_interface",
+    // Retain the stock ABI for reference/link checks only. hardware/xiaomi owns
+    // the installed interface with this SONAME, even when the stock HAL is off.
+    installable: false,
     stem: "vendor.xiaomi.hardware.touchfeature@1.0",
     arch: {
         arm: {
