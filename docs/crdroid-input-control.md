@@ -40,7 +40,7 @@ python3 tools/build-input.py --rom-root /path/to/pixelos
 python3 tools/build-stylus-ota.py --rom-root /path/to/pixelos
 python3 tools/verify-input.py --rom-root /path/to/pixelos
 python3 tools/check-input-control.py
-python3 tools/check-input-policy.py --android-root /path/to/pixelos --build-variant userdebug
+python3 tools/check-input-policy.py --android-root /path/to/pixelos
 ```
 
 검증 결과:
@@ -87,3 +87,7 @@ Android 기본 동작(기본값), 빠른 노트, 영역 캡처 중 선택할 수
 호환 노트 앱이 설치되어 있어야 합니다.
 
 현재 기기에서 확인한 식별값과 검증 한계는 [ADB 읽기 기록](device-observations-20261027.md)을 보세요.
+
+정책 검증 도구는 이제 실제 `custom_nabu`의 `sepolicy_neverallows` 산출물만 사용한다.
+다른 기기의 결합 정책을 주입하는 이전 참고 검사는 수행하지 않는다.
+외부 OUT_DIR은 `--out-dir /path/to/out`으로 지정한다. 실제 제품 정책을 먼저 빌드해야 한다.

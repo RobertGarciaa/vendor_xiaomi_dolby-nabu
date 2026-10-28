@@ -2,7 +2,7 @@
  * Copyright (C) 2026 The LineageOS Project
  * SPDX-License-Identifier: Apache-2.0
  *
- * The persistent keeper of the Dolby software DAP effect on renoir.
+ * The persistent keeper of the Pad 5 stock hardware DAP effect on nabu.
  *
  * Why this is a separate process
  * ------------------------------
@@ -47,10 +47,10 @@ import java.util.UUID;
 public final class DolbyEffectService extends Service {
     private static final String TAG = "DolbyEffectService";
 
-    /** Redwood software DAP descriptor (libswdap.so). */
+    /** Pad 5 hardware DAP descriptor (libhwdap.so). */
     public static final UUID DAP_IMPL_UUID =
             UUID.fromString("9d4921da-8225-4f29-aefa-39537a04bcaa");
-    /** Redwood DAP descriptor type, shared by the SW and HW engines. */
+    /** Stock hardware DAP descriptor type, matched against both libhwdap ABIs. */
     public static final UUID DAP_TYPE_UUID =
             UUID.fromString("46d279d9-9be7-453d-9d7c-ef937f675587");
 
@@ -79,7 +79,7 @@ public final class DolbyEffectService extends Service {
     static final int PROFILE_MUSIC = 2;
     static final int PROFILE_VOICE = 8;
 
-    /** Parameter ids verified to exist in the Redwood DAP descriptor. */
+    /** Parameter ids used by the ported DAP controller; validate behavior on-device. */
     static final int P_HEADPHONE_VIRTUALIZER = 101;
     static final int P_SPEAKER_VIRTUALIZER = 102;
     static final int P_VOLUME_LEVELER_ENABLE = 103;

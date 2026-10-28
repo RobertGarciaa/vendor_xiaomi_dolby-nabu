@@ -410,7 +410,6 @@ hidl_package_root {
 hidl_interface {
     name: "vendor.pixelos.nabu.input@1.0",
     root: "vendor.pixelos.nabu",
-    vendor_available: true,
     srcs: [
         "input/interfaces/input/1.0/types.hal",
         "input/interfaces/input/1.0/IInputControl.hal",

@@ -120,3 +120,9 @@ DolbyControl은 AudioEffect를 통해 접근하므로 앱에 DMS 직접 접근 �
 
 스톡 DSP·GEF 경로를 사용하는 만큼 대상 커널·오디오 HAL·펌웨어 조합의 확인이 필요합니다.
 이 저장소는 기존 nabu 트리의 stock audio.primary.nabu, libqtigef 및 스피커 경로를 사용합니다.
+
+## 현재 체크아웃 사전 검사
+
+Android 17 HIDL 선언과 검사 도구 수정 및 검증 한계는
+[2026-10-28 검토 기록](docs/prebuild-review-20261028.md)을 참조한다.
+전체 user 빌드와 최종 산출물 검사는 사용자 빌드 후 수행한다.

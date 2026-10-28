@@ -10,6 +10,7 @@ import tempfile
 import uuid
 import xml.etree.ElementTree as ET
 import zipfile
+from rom_tools import command
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,7 +27,7 @@ def main():
     spec = importlib.util.spec_from_file_location('patch', ROOT/'tools/patch-misound.py')
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     apk = ROOT/'proprietary/ported/product/app/MiSound/MiSound.apk'
-    subprocess.run([str(a.rom_root/'out/host/linux-x86/bin/apksigner'), 'verify', str(apk)], check=True)
+    subprocess.run(command(a.rom_root, 'apksigner', 'verify', apk), check=True)
     with zipfile.ZipFile(apk) as z:
         dex, shims = z.read('classes.dex'), z.read('classes2.dex')
     assert not m.dex_strings_sorted(dex)[1], 'DEX string_ids are unsorted'

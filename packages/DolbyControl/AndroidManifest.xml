@@ -6,7 +6,7 @@
      Dolby entry point, Quick Settings tile and the persistent effect owner.
 
      The entry screen and QS use the same DAP controller. The graphic
-     equalizer is Redwood MiSound's original UI; unsupported MIUI audio
+     equalizer is Pad 5 MiSound's original UI; unsupported MIUI audio
      settings are not used as a prerequisite for editing Dolby.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"

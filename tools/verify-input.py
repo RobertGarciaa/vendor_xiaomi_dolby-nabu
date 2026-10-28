@@ -10,8 +10,11 @@ import xml.etree.ElementTree as ET
 import zipfile
 from functools import lru_cache
 from artifact_record import verify
+from rom_tools import command
 ROOT=Path(__file__).resolve().parents[1]
 NS='http://schemas.android.com/apk/res/android'
+# Without a built framework.jar, javap can inspect only public-SDK ancestors.
+
 
 def module(name,file):
  s=importlib.util.spec_from_file_location(name,file);m=importlib.util.module_from_spec(s);s.loader.exec_module(m);return m
@@ -29,6 +32,8 @@ def class_index(directory):
 
 def main():
  p=argparse.ArgumentParser(description=__doc__);p.add_argument('--rom-root',required=True,type=Path);a=p.parse_args();rom=a.rom_root
+ framework=rom/'out/soong/.intermediates/frameworks/base/framework/android_common/turbine-combined/framework.jar'
+ if not framework.is_file():print('NOTE: framework.jar missing; inherited API inspection uses public SDK only. Hidden API/platform compilation remains unverified.')
  module('input_builder',ROOT/'tools/build-input.py').verify_sources()
  dex_tools=module('dex_tools',ROOT/'tools/patch-misound.py')
  pairs=[('input','product/app/MiuiInputSettings_MIUI15/MiuiInputSettings_MIUI15.apk','product/app/MiuiInputSettings/MiuiInputSettings.apk'),
@@ -38,8 +43,8 @@ def main():
   for name,stock,ported in pairs:
    raw=ROOT/'proprietary'/stock;apk=ROOT/'proprietary/ported'/ported
    verify(ROOT,apk)
-   subprocess.run([str(rom/'out/host/linux-x86/bin/apksigner'),'verify',str(apk)],check=True)
-   subprocess.run([str(rom/'out/host/linux-x86/bin/zipalign'),'-c','-P','16','4',str(apk)],check=True,capture_output=True)
+   subprocess.run(command(rom, 'apksigner', 'verify', apk),check=True)
+   subprocess.run(command(rom, 'zipalign', '-c', '-P', '16', '4', apk),check=True,capture_output=True)
    with zipfile.ZipFile(raw) as z,zipfile.ZipFile(apk) as out:
     for entry in z.namelist():
      if entry.startswith(('res/','assets/','lib/')) or entry=='resources.arsc':assert z.read(entry)==out.read(entry),(name,entry)
@@ -52,7 +57,7 @@ def main():
      subprocess.run(['java','-jar',str(rom/'prebuilts/extract-tools/common/smali/baksmali.jar'),'d',str(dex),'-o',str(dest)],check=True,capture_output=True)
      extra=class_index(dest);assert not set(index)&set(extra),'Duplicate classes across DEX files';index.update(extra)
     indexes[name]=index
-   tree=subprocess.check_output([str(rom/'out/host/linux-x86/bin/aapt2'),'dump','xmltree',str(apk),'--file','AndroidManifest.xml'],text=True)
+   tree=subprocess.check_output(command(rom, 'aapt2', 'dump', 'xmltree', apk, '--file', 'AndroidManifest.xml'),text=True)
    assert 'android.permission.STATUS_BAR_SERVICE' in tree if name=='input' else 'android.permission.BLUETOOTH_PRIVILEGED' in tree
    if name=='ota':
     assert 'android.uid.bluetooth' not in tree,'OTA companion must not join Bluetooth shared UID'
@@ -91,6 +96,8 @@ def main():
    parent=re.search(r'^\.super (L[^;]+;)',text,re.M)
    return bool(parent) and resolves(parent[1],member)
   for owner,member in sorted(refs):
+   if owner in index and not resolves(owner,member) and not framework.is_file():
+    raise SystemExit('INCOMPLETE: public SDK cannot verify inherited hidden API '+owner+'->'+member+'; build framework.jar before running the full API check')
    assert owner in index and resolves(owner,member), 'Unresolved input API '+owner+'->'+member
   alltext='\n'.join(text for text,_ in index.values())
   assert 'Landroid/provider/MiuiSettings$' not in alltext
