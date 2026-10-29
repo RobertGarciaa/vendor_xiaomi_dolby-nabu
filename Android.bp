@@ -449,3 +449,13 @@ cc_binary {
         "-Werror",
     ],
 }
+
+// Qualcomm DSP firmware, not an application-processor shared library.
+prebuilt_rfsa {
+    name: "nabu_dolby_capi_v2_dap_cpdp",
+    owner: "xiaomi",
+    src: "proprietary/vendor/lib/rfsa/adsp/capi_v2_dap_cpdp.so",
+    filename: "capi_v2_dap_cpdp.so",
+    relative_install_path: "adsp",
+    soc_specific: true,
+}
