@@ -459,3 +459,13 @@ prebuilt_rfsa {
     relative_install_path: "adsp",
     soc_specific: true,
 }
+
+// Stock libqtigef formats audio.primary.msmnile.so at runtime. The nabu
+// vendor tree renames that same stock HAL to audio.primary.nabu.so. Keep
+// the old lookup path pointing to the existing HAL; do not load a second copy.
+install_symlink {
+    name: "nabu_dolby_audio_primary_compat",
+    soc_specific: true,
+    installed_location: "lib/hw/audio.primary.msmnile.so",
+    symlink_target: "/vendor/lib/hw/audio.primary.nabu.so",
+}

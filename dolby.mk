@@ -14,7 +14,8 @@ PRODUCT_PACKAGES += \
     vendor.dolby.hardware.dms@2.0-service.rc \
     DolbyControl \
     MiSound \
-    nabu_dolby_capi_v2_dap_cpdp
+    nabu_dolby_capi_v2_dap_cpdp \
+    nabu_dolby_audio_primary_compat
 
 PRODUCT_COPY_FILES += \
     vendor/xiaomi/dolby-nabu/configs/audio/audio_effects_dolby.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \
