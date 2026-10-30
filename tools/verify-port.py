@@ -70,11 +70,11 @@ def main():
         haptic=(d/'app/r3/a.smali').read_text()
         for name in re.findall(r'const-string [vp]\d+, "((?:perform|isSupport|stop)[A-Za-z]*)"',haptic):
             assert any(x.startswith(name+'(') for x in provided['Lmiui/util/HapticFeedbackUtil;']), name
-    check_gef_hal_lookup()
+    check_gef_hal_lookup(a.rom_root)
     print('PASS: APK signature, sorted DEX, nabu patches, both hardware DAP descriptors, exact MIUI member signatures and effects XML; GEF HAL lookup targets the stock nabu HAL')
 
 
-def check_gef_hal_lookup():
+def check_gef_hal_lookup(rom_root):
     """The GEF patch must retarget the HAL path and leave the binary otherwise intact.
 
     A wrong replacement offset would corrupt an unrelated string; a wrong length
@@ -113,12 +113,15 @@ def check_gef_hal_lookup():
     assert patched.count(b'msmnile') == 0, 'old platform literal still present'
     assert gef.RELATIVE_PATH.encode() in patched, 'HAL path format string changed'
 
-    # The HAL this now points at is the shipped stock HAL.
-    hal = Path('/home/ccc/android/pixelos/vendor/xiaomi/nabu/proprietary'
-               '/vendor/lib/hw/audio.primary.nabu.so')
+    # The HAL this now points at is the shipped stock HAL. Resolve it through the
+    # ROM root the caller passed so the check works from any checkout.
+    hal = (Path(rom_root) / 'vendor/xiaomi/nabu/proprietary'
+           '/vendor/lib/hw/audio.primary.nabu.so')
     if hal.is_file():
         assert b'audio_extn_gef_init' in hal.read_bytes(), \
             'stock nabu HAL does not export GEF entry points'
+    else:
+        print(f'note: stock HAL not found at {hal}; GEF export check skipped')
 
 
 if __name__ == '__main__':
