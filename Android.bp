@@ -502,7 +502,6 @@ cc_prebuilt_library_shared {
     name: "libqtigef_nabu",
     owner: "xiaomi",
     stem: "libqtigef",
-    filename: "libqtigef.so",
     overrides: ["libqtigef"],
     srcs: [":nabu_gef_hal_lookup_nabu"],
     shared_libs: [
