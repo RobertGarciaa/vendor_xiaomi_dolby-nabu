@@ -1,5 +1,8 @@
 # Xiaomi Pad 5 / nabu Global OS1.0.6.0.TKXMIXM, Android 13
 # Unmodified source files; MiSound build output is stored separately.
+# Build input for the GEF HAL lookup fixup; the shared sm8150-common
+# copy is byte-identical (same pinned source blob).
+vendor/lib/libqtigef.so
 vendor/lib64/libdlbdsservice.so
 vendor/lib64/vendor.dolby.hardware.dms@2.0-impl.so
 vendor/bin/hw/vendor.dolby.hardware.dms@2.0-service

@@ -460,12 +460,63 @@ prebuilt_rfsa {
     soc_specific: true,
 }
 
-// Stock libqtigef formats audio.primary.msmnile.so at runtime. The nabu
-// vendor tree renames that same stock HAL to audio.primary.nabu.so. Keep
-// the old lookup path pointing to the existing HAL; do not load a second copy.
-install_symlink {
-    name: "nabu_dolby_audio_primary_compat",
+// Stock libqtigef resolves the audio HAL through a hard-coded platform string,
+// building "/vendor/lib/hw/audio.primary.%s.so" with "msmnile". nabu's only
+// stock HAL is installed as audio.primary.nabu.so, so that lookup failed and
+// gef_set_param_v1 returned -38 (no HAL transfer function).
+//
+// Two candidate fixes exist: install a compatibility symlink at
+// audio.primary.msmnile.so, or retarget the GEF lookup. The symlink collides
+// with the qcom-caf source HAL, which also installs to that exact path (Kati:
+// "overriding commands for target vendor/lib/hw/audio.primary.msmnile.so"), and
+// it risks dlopen'ing a second HAL instead of the one AudioFlinger owns.
+//
+// Retargeting the literal is the safe option: GEF then asks for
+// /vendor/lib/hw/audio.primary.nabu.so, which AudioFlinger already loaded, so
+// dlopen returns that same handle and the GEF session shares the HAL's device
+// context. The tool asserts the output hash, and the patch is offset-neutral:
+// only the string contents change, not a single instruction.
+python_binary_host {
+    name: "nabu_gef_hal_lookup_fixup",
+    main: "tools/gef_hal_lookup_compat.py",
+    srcs: ["tools/gef_hal_lookup_compat.py"],
+}
+
+genrule {
+    name: "nabu_gef_hal_lookup_nabu",
+    tools: ["nabu_gef_hal_lookup_fixup"],
+    srcs: ["proprietary/vendor/lib/libqtigef.so"],
+    out: ["libqtigef.so"],
+    cmd: "$(location nabu_gef_hal_lookup_fixup) --input $(in) --output $(out)",
+}
+
+// nabu-only replacement for the shared sm8150-common libqtigef. Same module
+// stem and filename so the installed path stays /vendor/lib/libqtigef.so, which
+// is what both the stock HAL (dlopen "libqtigef.so") and libhwdap expect.
+//
+// `overrides` is the supported way to replace one module with another at the
+// same install path: it drops the overridden module from PRODUCT_PACKAGES, so
+// only one binary owns /vendor/lib/libqtigef.so and Kati never sees two recipes
+// for that target. dolby.mk also subtracts libqtigef explicitly as a safeguard.
+cc_prebuilt_library_shared {
+    name: "libqtigef_nabu",
+    owner: "xiaomi",
+    stem: "libqtigef",
+    filename: "libqtigef.so",
+    overrides: ["libqtigef"],
+    srcs: [":nabu_gef_hal_lookup_nabu"],
+    shared_libs: [
+        "liblog",
+        "libcutils",
+        "libc++",
+        "libc",
+        "libm",
+        "libdl",
+    ],
+    compile_multilib: "32",
+    strip: {
+        none: true,
+    },
+    prefer: true,
     soc_specific: true,
-    installed_location: "lib/hw/audio.primary.msmnile.so",
-    symlink_target: "/vendor/lib/hw/audio.primary.nabu.so",
 }

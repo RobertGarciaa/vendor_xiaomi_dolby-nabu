@@ -2,6 +2,18 @@
 # Xiaomi Pad 5 stock Dolby Atmos; install this repository at vendor/xiaomi/dolby-nabu.
 PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu
 
+# The stock libqtigef builds its GEF HAL path from the literal "msmnile". nabu
+# installs its one stock HAL as audio.primary.nabu.so, so the unpatched library
+# could not find it and GEF returned -38. Ship a nabu-specific copy whose lookup
+# string is retargeted instead of adding an audio.primary.msmnile.so symlink,
+# which would collide with the qcom-caf source HAL at the same install path.
+#
+# Exactly one writer must own /vendor/lib/libqtigef.so, so drop the shared
+# sm8150-common copy first. This runs after msmnile.mk and sm8150-common-vendor.mk
+# have appended it, so the subtraction is effective.
+PRODUCT_PACKAGES -= libqtigef
+PRODUCT_PACKAGES += libqtigef_nabu
+
 PRODUCT_PACKAGES += \
     libdapparamstorage \
     libdlbdsservice \
@@ -14,8 +26,7 @@ PRODUCT_PACKAGES += \
     vendor.dolby.hardware.dms@2.0-service.rc \
     DolbyControl \
     MiSound \
-    nabu_dolby_capi_v2_dap_cpdp \
-    nabu_dolby_audio_primary_compat
+    nabu_dolby_capi_v2_dap_cpdp
 
 PRODUCT_COPY_FILES += \
     vendor/xiaomi/dolby-nabu/configs/audio/audio_effects_dolby.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_effects.xml \

@@ -70,7 +70,56 @@ def main():
         haptic=(d/'app/r3/a.smali').read_text()
         for name in re.findall(r'const-string [vp]\d+, "((?:perform|isSupport|stop)[A-Za-z]*)"',haptic):
             assert any(x.startswith(name+'(') for x in provided['Lmiui/util/HapticFeedbackUtil;']), name
-    print('PASS: APK signature, sorted DEX, nabu patches, both hardware DAP descriptors, exact MIUI member signatures and effects XML')
+    check_gef_hal_lookup()
+    print('PASS: APK signature, sorted DEX, nabu patches, both hardware DAP descriptors, exact MIUI member signatures and effects XML; GEF HAL lookup targets the stock nabu HAL')
+
+
+def check_gef_hal_lookup():
+    """The GEF patch must retarget the HAL path and leave the binary otherwise intact.
+
+    A wrong replacement offset would corrupt an unrelated string; a wrong length
+    would shift every following byte. Both are rejected here, and the patched
+    output is regenerated in memory to prove the shipped tool reproduces it.
+    """
+    import hashlib
+    import struct
+    spec = importlib.util.spec_from_file_location(
+        'gef', ROOT / 'tools/gef_hal_lookup_compat.py')
+    gef = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gef)
+
+    stock = ROOT / 'proprietary/vendor/lib/libqtigef.so'
+    assert stock.is_file(), 'missing pinned libqtigef build input'
+    data = stock.read_bytes()
+    assert hashlib.sha256(data).hexdigest() == gef.INPUT_SHA256, \
+        'libqtigef input does not match its pin'
+
+    patched, offset = gef.patch(data)
+    assert len(patched) == len(data), 'GEF patch changed the file length'
+
+    # Only the platform literal and its NUL padding may differ.
+    diff = [i for i in range(len(data)) if data[i] != patched[i]]
+    assert diff, 'GEF patch did not change anything'
+    assert min(diff) >= offset and max(diff) < offset + len(gef.OLD_PLATFORM) + 1, \
+        f'GEF patch touched bytes outside the literal: {diff[:5]}'
+
+    # ELF identity: same class/endian/machine and identical program headers.
+    assert patched[:6] == b'\x7fELF\x01\x01', 'patched file is not ELF32 LE'
+    assert struct.unpack_from('<H', patched, 18)[0] == 40, 'patched file is not ARM'
+    assert struct.unpack_from('<H', data, 18) == struct.unpack_from('<H', patched, 18)
+
+    # The lookup string must now resolve the HAL AudioFlinger actually loads.
+    assert b'nabu\x00' in patched, 'platform literal was not retargeted'
+    assert patched.count(b'msmnile') == 0, 'old platform literal still present'
+    assert gef.RELATIVE_PATH.encode() in patched, 'HAL path format string changed'
+
+    # The HAL this now points at is the shipped stock HAL.
+    hal = Path('/home/ccc/android/pixelos/vendor/xiaomi/nabu/proprietary'
+               '/vendor/lib/hw/audio.primary.nabu.so')
+    if hal.is_file():
+        assert b'audio_extn_gef_init' in hal.read_bytes(), \
+            'stock nabu HAL does not export GEF entry points'
+
 
 if __name__ == '__main__':
     main()
