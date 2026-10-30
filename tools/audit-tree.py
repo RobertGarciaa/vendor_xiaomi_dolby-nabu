@@ -231,7 +231,7 @@ def added_by_product_packages(mk_text, module):
 
 
 def audit_qtigef_single_owner(bp_text, errors, rom_root):
-    """libqtigef_nabu owns /vendor/lib/libqtigef.so; the shared copy must be off.
+    """Only one GEF module may emit a Soong install rule for libqtigef.so.
 
     `overrides` cannot express this: fsgen turns it into Overridden_deps and adds
     a dependency for every arch of the vendor image, but the shared libqtigef is
@@ -248,6 +248,30 @@ def audit_qtigef_single_owner(bp_text, errors, rom_root):
     if field_list(body, 'overrides'):
         errors.append('libqtigef_nabu must not use overrides: fsgen asks for an '
                       'arm64 variant of the arm-only shared libqtigef')
+
+    # Product-package exclusion alone leaves both Soong install rules alive.
+    # Check complementary module enablement as well as the Make product guard.
+    def has_gate(module, active, fallback):
+        pattern = (
+            r'enabled:\s*select\(soong_config_variable\("nabu_dolby",\s*'
+            r'"replace_qtigef"\),\s*\{\s*true:\s*' + active +
+            r',\s*default:\s*' + fallback + r',?\s*\}\)'
+        )
+        return re.search(pattern, module) is not None
+
+    if not has_gate(body, 'true', 'false'):
+        errors.append('libqtigef_nabu must be enabled only by nabu_dolby.replace_qtigef')
+    if '$(call soong_config_set_bool,nabu_dolby,replace_qtigef,true)' not in (ROOT / 'dolby.mk').read_text():
+        errors.append('dolby.mk must export the typed replace_qtigef Soong flag')
+    common_bp = Path(rom_root) / 'vendor/xiaomi/sm8150-common/Android.bp'
+    if not common_bp.is_file():
+        errors.append('Missing common Android.bp; cannot check GEF install rules')
+    else:
+        original = next((b for k, b in module_blocks(common_bp.read_text())
+                         if k == 'cc_prebuilt_library_shared'
+                         and field(b, 'name') == 'libqtigef'), None)
+        if original is None or not has_gate(original, 'false', 'true'):
+            errors.append('shared libqtigef must be disabled in Soong when the nabu replacement is enabled; PRODUCT_PACKAGES filtering alone still generates duplicate install rules')
 
     shared = Path(rom_root) / 'vendor/xiaomi/sm8150-common/sm8150-common-vendor.mk'
     if not shared.is_file():

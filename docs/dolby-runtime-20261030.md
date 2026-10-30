@@ -1,5 +1,30 @@
 # Dolby GEF HAL 경로 수정 — 2026-10-30
 
+## 추가 수정 — libqtigef 설치 규칙 충돌
+
+사용자 빌드에서 `vendor/lib/libqtigef.so` 중복 설치 오류가 발생했다.
+제품 목록에서 공통 모듈을 제외하는 것만으로는 Soong이 내보내는 설치 규칙이 사라지지 않았다.
+이 문서 아래의 제품 목록 가드만으로 단일 소유자를 보장한다는 설명은 불충분했다.
+
+- `dolby.mk`가 `nabu_dolby.replace_qtigef`를 Soong bool로 설정한다.
+- 공통 `libqtigef`는 해당 값이 true일 때 `enabled: false`, 기본값은 true다.
+- `libqtigef_nabu`는 반대로 true일 때만 활성화되고 기본값은 false다.
+- 공통 추출 도구가 vendor 파일 재생성 후 같은 BP 조건과 제품 목록 가드를 복원한다.
+- GEF 바이너리 패치·SONAME·설치 파일명·nabu HAL·DAX 튜닝·SELinux는 변경하지 않는다.
+
+정적 감사와 회귀 검사, 추출 후처리 복원·멱등성 검사, 기존 verify-port 검사가 통과했다.
+회귀 검사는 제품 목록만 제외하고 두 모듈을 활성 상태로 둔 이전 구성을 거부한다.
+전체 Soong/Kati 및 ROM 빌드는 실행하지 않았다. 다음 사용자 빌드에서 설치 규칙이
+하나만 생성되는지 확인해야 하며, 실제 효과 적용 검증은 여전히 재생 후 별도로 필요하다.
+
+검사 명령:
+
+```sh
+python3 tools/audit-tree.py --rom-root /path/to/pixelos
+python3 tools/test-qtigef-ownership.py --rom-root /path/to/pixelos
+python3 tools/verify-port.py --rom-root /path/to/pixelos
+```
+
 ## 문제
 
 두 가지가 동시에 존재했다.

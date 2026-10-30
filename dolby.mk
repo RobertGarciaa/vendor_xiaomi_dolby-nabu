@@ -10,7 +10,9 @@ PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu
 #
 # libqtigef_nabu installs as /vendor/lib/libqtigef.so. sm8150-common-vendor.mk
 # leaves the shared libqtigef out when TARGET_ENABLE_XIAOMI_DOLBY is true, so
-# this module is the only writer of that path.
+# the corresponding Soong modules must also be mutually exclusive.
+# Merely omitting a module from PRODUCT_PACKAGES does not remove its install rule.
+$(call soong_config_set_bool,nabu_dolby,replace_qtigef,true)
 PRODUCT_PACKAGES += libqtigef_nabu
 
 PRODUCT_PACKAGES += \

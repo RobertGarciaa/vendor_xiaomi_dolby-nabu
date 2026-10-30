@@ -493,9 +493,14 @@ genrule {
 // nabu-only replacement for the shared sm8150-common libqtigef: same stem, so
 // the installed path stays /vendor/lib/libqtigef.so, which both the stock HAL
 // (dlopen "libqtigef.so") and libhwdap expect. sm8150-common-vendor.mk skips
-// libqtigef when this product enables Dolby, so this is the only writer.
+// libqtigef from the product list. Complementary enabled conditions also
+// disable the unused Soong module, preventing duplicate Kati install rules.
 cc_prebuilt_library_shared {
     name: "libqtigef_nabu",
+    enabled: select(soong_config_variable("nabu_dolby", "replace_qtigef"), {
+        true: true,
+        default: false,
+    }),
     owner: "xiaomi",
     stem: "libqtigef",
     srcs: [":nabu_gef_hal_lookup_nabu"],
