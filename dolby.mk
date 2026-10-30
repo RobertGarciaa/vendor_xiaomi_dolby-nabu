@@ -8,10 +8,9 @@ PRODUCT_SOONG_NAMESPACES += vendor/xiaomi/dolby-nabu
 # string is retargeted instead of adding an audio.primary.msmnile.so symlink,
 # which would collide with the qcom-caf source HAL at the same install path.
 #
-# Exactly one writer must own /vendor/lib/libqtigef.so, so drop the shared
-# sm8150-common copy first. This runs after msmnile.mk and sm8150-common-vendor.mk
-# have appended it, so the subtraction is effective.
-PRODUCT_PACKAGES -= libqtigef
+# libqtigef_nabu installs as /vendor/lib/libqtigef.so. sm8150-common-vendor.mk
+# leaves the shared libqtigef out when TARGET_ENABLE_XIAOMI_DOLBY is true, so
+# this module is the only writer of that path.
 PRODUCT_PACKAGES += libqtigef_nabu
 
 PRODUCT_PACKAGES += \

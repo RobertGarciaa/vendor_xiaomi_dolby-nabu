@@ -158,8 +158,13 @@ def sibling_module_names(rom_root):
 
 
 def parse_product_packages(mk_text):
-    """Return (added, removed) module names declared in dolby.mk."""
-    added, removed = [], []
+    """Return (added, ignored) module names declared in dolby.mk.
+
+    `-=` is reported separately: Make has no minus-assignment operator, so Kati
+    treats the line as an assignment to a variable named "PRODUCT_PACKAGES -"
+    and the removal silently never happens.
+    """
+    added, ignored = [], []
     # Join continuation lines so one logical assignment is one string.
     for raw in mk_text.splitlines():
         line = raw.strip()
@@ -169,23 +174,93 @@ def parse_product_packages(mk_text):
             continue
         m = re.match(r'PRODUCT_PACKAGES\s*-=\s*(.*)', line)
         if m:
-            removed += [x for x in m.group(1).split() if x and x != '\\']
-    return added, removed
+            ignored += [x for x in m.group(1).split() if x and x != '\\']
+    return added, ignored
 
 
 def audit_packages(bp_text, errors, rom_root):
     mk = (ROOT / 'dolby.mk').read_text()
     here = {field(body, 'name') for _, body in module_blocks(bp_text)}
     elsewhere = sibling_module_names(rom_root) | here
-    added, removed = parse_product_packages(mk)
+    added, ignored = parse_product_packages(mk)
+
+    for name in ignored:
+        errors.append(
+            f'dolby.mk uses PRODUCT_PACKAGES -= {name}; Make has no minus '
+            'assignment, so Kati keeps the old list and nothing is removed')
 
     for name in added:
-        if name in removed:
-            continue
         if name in here or name in elsewhere:
             continue
         errors.append(f'dolby.mk PRODUCT_PACKAGES += {name} '
                       'is not defined in this repo or an inherited one')
+
+
+def added_by_product_packages(mk_text, module):
+    """Return True if module is added by PRODUCT_PACKAGES, and whether that
+    addition sits inside a TARGET_ENABLE_XIAOMI_DOLBY conditional."""
+    stack = []
+    in_list = False
+    added = unguarded = False
+    for raw in mk_text.splitlines():
+        line = raw.strip()
+        if re.match(r'ifn?eq\b|ifdef\b|ifndef\b', line):
+            stack.append('TARGET_ENABLE_XIAOMI_DOLBY' in line)
+            continue
+        if line.startswith('endif'):
+            if stack:
+                stack.pop()
+            continue
+        if in_list:
+            if module in line.split():
+                added = True
+                if not any(stack):
+                    unguarded = True
+            if not line.endswith('\\'):
+                in_list = False
+            continue
+        m = re.match(r'PRODUCT_PACKAGES\s*\+?=\s*(.*)', line)
+        if m:
+            rhs = m.group(1)
+            if module in [w.rstrip('\\') for w in rhs.split()]:
+                added = True
+                if not any(stack):
+                    unguarded = True
+            in_list = rhs.rstrip().endswith('\\')
+    return added, unguarded
+
+
+def audit_qtigef_single_owner(bp_text, errors, rom_root):
+    """libqtigef_nabu owns /vendor/lib/libqtigef.so; the shared copy must be off.
+
+    `overrides` cannot express this: fsgen turns it into Overridden_deps and adds
+    a dependency for every arch of the vendor image, but the shared libqtigef is
+    arm-only, so arm64 resolution fails before anything is built.
+    """
+    body = next((b for k, b in module_blocks(bp_text)
+                 if k == 'cc_prebuilt_library_shared'
+                 and field(b, 'name') == 'libqtigef_nabu'), None)
+    if body is None:
+        errors.append('libqtigef_nabu module is missing')
+        return
+    if field(body, 'stem') != 'libqtigef':
+        errors.append('libqtigef_nabu must install as libqtigef.so via stem')
+    if field_list(body, 'overrides'):
+        errors.append('libqtigef_nabu must not use overrides: fsgen asks for an '
+                      'arm64 variant of the arm-only shared libqtigef')
+
+    shared = Path(rom_root) / 'vendor/xiaomi/sm8150-common/sm8150-common-vendor.mk'
+    if not shared.is_file():
+        errors.append(f'{shared} is missing; cannot verify single ownership')
+        return
+    added, unguarded = added_by_product_packages(shared.read_text(), 'libqtigef')
+    if not added:
+        errors.append('sm8150-common-vendor.mk no longer adds libqtigef; the '
+                      'Dolby build would lose the stock library')
+    elif unguarded:
+        errors.append('sm8150-common-vendor.mk adds libqtigef without a '
+                      'TARGET_ENABLE_XIAOMI_DOLBY guard, so Dolby products get '
+                      'two writers for /vendor/lib/libqtigef.so')
 
 
 def audit_pins(errors):
@@ -231,6 +306,7 @@ def main():
     audit_install_paths(bp_text, errors, warnings)
     audit_inputs(bp_text, errors)
     audit_packages(bp_text, errors, a.rom_root)
+    audit_qtigef_single_owner(bp_text, errors, a.rom_root)
     audit_pins(errors)
     audit_no_symlink_on_hal(errors)
 

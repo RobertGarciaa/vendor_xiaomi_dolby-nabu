@@ -53,11 +53,25 @@ msmnile(7바이트) → nabu(4바이트) + NUL 3개
 
 `/vendor/lib/libqtigef.so`의 작성자는 하나여야 한다.
 
-- `libqtigef_nabu`가 `overrides: ["libqtigef"]`를 선언한다. Soong이
-  `PRODUCT_PACKAGES`에서 `libqtigef`를 제거하는 공식 경로다.
-- `dolby.mk`가 `PRODUCT_PACKAGES -= libqtigef`를 한 번 더 수행한다(이중 안전장치).
-- 모듈 stem/filename을 `libqtigef`/`libqtigef.so`로 맞춰 설치 경로가 그대로다.
-  스톡 HAL(`dlopen "libqtigef.so"`)과 `libhwdap`(ARM32/64) 모두 같은 파일을 본다.
+- `vendor/xiaomi/sm8150-common/sm8150-common-vendor.mk`가
+  `TARGET_ENABLE_XIAOMI_DOLBY`가 true일 때 `libqtigef`를 **추가하지 않는다**.
+- `dolby.mk`가 `libqtigef_nabu`를 추가한다. 이 모듈은 `stem: "libqtigef"`로
+  설치되므로 경로가 그대로 `/vendor/lib/libqtigef.so`다.
+- 스톡 HAL(`dlopen "libqtigef.so"`)과 `libhwdap`(ARM32/64) 모두 같은 파일을 본다.
+
+`overrides`와 `PRODUCT_PACKAGES -=`는 쓰지 않는다.
+
+- `overrides: ["libqtigef"]`는 fsgen에서 `Overridden_deps`가 되고, vendor 이미지의
+  **모든 아키텍처**에 대한 의존성이 된다. vendor 이미지는 `compile_multilib: "both"`라
+  arm64 변형을 찾는데 공통 `libqtigef`는 ARM32 전용이므로 Soong이 중단한다:
+  `dependency "//vendor/xiaomi/sm8150-common:libqtigef" ... missing variant:
+  arch:arm64_armv8-2a-dotprod_kryo385`.
+- Make에는 `-=` 연산자가 없다. Kati는 `PRODUCT_PACKAGES -= libqtigef`를
+  `PRODUCT_PACKAGES -`라는 이름의 변수 할당으로 처리하고 목록에서 아무것도
+  지우지 않는다(실측: `X := a b c` 뒤 `X -= b` → `a b c`). 그래서 이 줄은
+  이중 안전장치가 아니라 무효였다.
+- `tools/audit-tree.py`가 두 실수를 모두 검사한다: `-=` 사용, 그리고 공통 mk의
+  `libqtigef` 추가가 Dolby 가드 밖에 있는 경우.
 
 `audio.primary.msmnile.so`에 링크를 만드는 모듈은 이 저장소에 더 이상 없다.
 

@@ -490,19 +490,14 @@ genrule {
     cmd: "$(location nabu_gef_hal_lookup_fixup) --input $(in) --output $(out)",
 }
 
-// nabu-only replacement for the shared sm8150-common libqtigef. Same module
-// stem and filename so the installed path stays /vendor/lib/libqtigef.so, which
-// is what both the stock HAL (dlopen "libqtigef.so") and libhwdap expect.
-//
-// `overrides` is the supported way to replace one module with another at the
-// same install path: it drops the overridden module from PRODUCT_PACKAGES, so
-// only one binary owns /vendor/lib/libqtigef.so and Kati never sees two recipes
-// for that target. dolby.mk also subtracts libqtigef explicitly as a safeguard.
+// nabu-only replacement for the shared sm8150-common libqtigef: same stem, so
+// the installed path stays /vendor/lib/libqtigef.so, which both the stock HAL
+// (dlopen "libqtigef.so") and libhwdap expect. sm8150-common-vendor.mk skips
+// libqtigef when this product enables Dolby, so this is the only writer.
 cc_prebuilt_library_shared {
     name: "libqtigef_nabu",
     owner: "xiaomi",
     stem: "libqtigef",
-    overrides: ["libqtigef"],
     srcs: [":nabu_gef_hal_lookup_nabu"],
     shared_libs: [
         "liblog",
