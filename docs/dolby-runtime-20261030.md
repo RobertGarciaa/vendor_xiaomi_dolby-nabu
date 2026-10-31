@@ -76,13 +76,34 @@ msmnile(7바이트) → nabu(4바이트) + NUL 3개
 
 ## 설치 경로 단일성
 
-`/vendor/lib/libqtigef.so`의 작성자는 하나여야 한다.
+`/vendor/lib/libqtigef.so`와 `/vendor/lib64/libqtigef.so`의 작성자는 각각 하나여야 한다.
 
 - `vendor/xiaomi/sm8150-common/sm8150-common-vendor.mk`가
   `TARGET_ENABLE_XIAOMI_DOLBY`가 true일 때 `libqtigef`를 **추가하지 않는다**.
 - `dolby.mk`가 `libqtigef_nabu`를 추가한다. 이 모듈은 `stem: "libqtigef"`로
-  설치되므로 경로가 그대로 `/vendor/lib/libqtigef.so`다.
+  설치되므로 경로가 그대로 `/vendor/lib{,64}/libqtigef.so`다.
 - 스톡 HAL(`dlopen "libqtigef.so"`)과 `libhwdap`(ARM32/64) 모두 같은 파일을 본다.
+
+### 두 ABI 가 모두 필요하다
+
+스톡 nabu vendor 에는 `lib/libqtigef.so`(12,712B)와 `lib64/libqtigef.so`(19,600B)가
+둘 다 있다. 처음 이식에서는 32비트만 넣었는데, 그것이 **부팅을 막는다**:
+
+`vendor/lib64/soundfx/libhwdap.so`는 `dlopen("libqtigef.so", RTLD_NOW)` 결과가
+`NULL`이면 `__android_log_assert`로 프로세스를 중단한다(오프셋 `0xcbac` 의
+`bl dlopen`, `0xcbb4` 의 `cbz x0, <assert>`). audioserver 는 64비트이므로
+64비트 `libqtigef.so`가 없으면 효과 HAL 초기화 시 죽는다.
+
+두 파일 모두 `msmnile` 리터럴을 갖고 `tools/gef_hal_lookup_compat.py`가 같은
+방식으로 `nabu`로 바꾼다. 입력·출력 해시는 ABI 별로 따로 pin 했다.
+
+| ABI | 입력 | 출력 |
+|---|---|---|
+| ARM32 | `ccac6350…` | `2a91c5d8…` |
+| ARM64 | `68419da3…` | `b80cd836…` |
+
+`tools/audit-tree.py`가 `compile_multilib: "both"`, 두 arch source, 두 blob 의
+존재와 pin 을 모두 검사한다.
 
 `overrides`와 `PRODUCT_PACKAGES -=`는 쓰지 않는다.
 

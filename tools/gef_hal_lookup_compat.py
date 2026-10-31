@@ -40,14 +40,33 @@ build is rejected rather than silently patched in the wrong place.
 
 The patched library is nabu-specific and is never installed for other sm8150
 devices: it ships from vendor/xiaomi/dolby-nabu and only that product inherits it.
+
+Both ABIs are shipped. The stock vendor image carries a 32-bit and a 64-bit
+libqtigef.so, and vendor/lib64/soundfx/libhwdap.so dlopen()s "libqtigef.so"
+expecting the 64-bit one; without it that dlopen returns NULL and libhwdap
+aborts on __android_log_assert. Both copies contain the same "msmnile" literal
+and get the same offset-neutral rewrite.
 """
 import argparse
 import hashlib
 import struct
 from pathlib import Path
 
-INPUT_SHA256 = 'ccac6350e59bda509c6fce8ce07355a81aa916e4b5313e1710b7b22f98732d42'
-OUTPUT_SHA256 = '2a91c5d827184a4fdcc86783d05c2fac20ad0454bea1821945977b496c38d0a8'
+# Per-ABI pinned inputs and outputs; a file must match exactly one profile.
+PROFILES = {
+    1: {  # ELF32, EM_ARM
+        'input': 'ccac6350e59bda509c6fce8ce07355a81aa916e4b5313e1710b7b22f98732d42',
+        'output': '2a91c5d827184a4fdcc86783d05c2fac20ad0454bea1821945977b496c38d0a8',
+        'machine': 40,
+        'name': 'ARM32',
+    },
+    2: {  # ELF64, EM_AARCH64
+        'input': '68419da3cf8add49bd7fa21db9cc793c0ff1db1f474da3f9b454e9a413166829',
+        'output': 'b80cd836afd81e9ed466e2e9268cb2251703f5fe33f1d0cb26f8aefaedb4fe83',
+        'machine': 183,
+        'name': 'ARM64',
+    },
+}
 OLD_PLATFORM = b'msmnile'
 NEW_PLATFORM = b'nabu'
 RELATIVE_PATH = '/vendor/lib/hw/audio.primary.%s.so'
@@ -57,25 +76,28 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def check_elf32_arm(data):
+def check_elf(data):
     if data[:4] != b'\x7fELF':
         raise ValueError('Not an ELF file')
-    if data[4] != 1:
-        raise ValueError('Expected ELF32 (stock libqtigef is 32-bit only)')
     if data[5] != 1:
         raise ValueError('Expected little-endian ELF')
-    e_machine = struct.unpack_from('<H', data, 18)[0]
-    if e_machine != 40:
-        raise ValueError(f'Expected EM_ARM (40), found {e_machine}')
+    elf_class = data[4]
+    profile = PROFILES.get(elf_class)
+    if profile is None:
+        raise ValueError(f'Unsupported ELF class {elf_class}')
+    machine = struct.unpack_from('<H' if elf_class == 1 else '<H', data, 18)[0]
+    if machine != profile['machine']:
+        raise ValueError(f"Expected {profile['name']} machine "
+                         f"{profile['machine']}, found {machine}")
+    if digest(data) != profile['input']:
+        raise ValueError(
+            f"Unexpected {profile['name']} libqtigef input; refusing to patch.\n"
+            f"  expected {profile['input']}\n  actual   {digest(data)}")
+    return profile
 
 
 def patch(data):
-    if digest(data) != INPUT_SHA256:
-        raise ValueError(
-            'Unexpected libqtigef input; refusing to patch.\n'
-            f'  expected {INPUT_SHA256}\n  actual   {digest(data)}')
-
-    check_elf32_arm(data)
+    profile = check_elf(data)
 
     if data.count(OLD_PLATFORM) != 1:
         raise ValueError('Expected exactly one "msmnile" literal')
@@ -95,10 +117,10 @@ def patch(data):
 
     if len(patched) != len(data):
         raise ValueError('Patch changed the file length')
-    if digest(patched) != OUTPUT_SHA256:
+    if digest(patched) != profile['output']:
         raise ValueError(
             'Patched output hash mismatch; the replacement changed more than '
-            f'the platform literal.\n  expected {OUTPUT_SHA256}\n'
+            f"the platform literal.\n  expected {profile['output']}\n"
             f'  actual   {digest(patched)}')
     return patched, offset
 

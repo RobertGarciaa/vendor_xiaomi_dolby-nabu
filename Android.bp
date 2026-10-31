@@ -498,11 +498,23 @@ genrule {
     cmd: "$(location nabu_gef_hal_lookup_fixup) --input $(in) --output $(out)",
 }
 
+genrule {
+    name: "nabu_gef_hal_lookup_nabu_64",
+    tools: ["nabu_gef_hal_lookup_fixup"],
+    srcs: ["proprietary/vendor/lib64/libqtigef.so"],
+    out: ["libqtigef_64.so"],
+    cmd: "$(location nabu_gef_hal_lookup_fixup) --input $(in) --output $(out)",
+}
+
 // nabu-only replacement for the shared sm8150-common libqtigef: same stem, so
-// the installed path stays /vendor/lib/libqtigef.so, which both the stock HAL
-// (dlopen "libqtigef.so") and libhwdap expect. sm8150-common-vendor.mk skips
+// the installed path stays /vendor/lib{,64}/libqtigef.so, which both the stock
+// HAL (dlopen "libqtigef.so") and libhwdap expect. sm8150-common-vendor.mk skips
 // libqtigef from the product list. Complementary enabled conditions also
 // disable the unused Soong module, preventing duplicate Kati install rules.
+//
+// Both ABIs are required: vendor/lib64/soundfx/libhwdap.so dlopen()s
+// "libqtigef.so" and aborts on __android_log_assert when that returns NULL, so
+// shipping only the 32-bit copy would kill audioserver at boot.
 cc_prebuilt_library_shared {
     name: "libqtigef_nabu",
     enabled: select(soong_config_variable("nabu_dolby", "replace_qtigef"), {
@@ -511,7 +523,14 @@ cc_prebuilt_library_shared {
     }),
     owner: "xiaomi",
     stem: "libqtigef",
-    srcs: [":nabu_gef_hal_lookup_nabu"],
+    arch: {
+        arm: {
+            srcs: [":nabu_gef_hal_lookup_nabu"],
+        },
+        arm64: {
+            srcs: [":nabu_gef_hal_lookup_nabu_64"],
+        },
+    },
     shared_libs: [
         "liblog",
         "libcutils",
@@ -520,7 +539,7 @@ cc_prebuilt_library_shared {
         "libm",
         "libdl",
     ],
-    compile_multilib: "32",
+    compile_multilib: "both",
     strip: {
         none: true,
     },

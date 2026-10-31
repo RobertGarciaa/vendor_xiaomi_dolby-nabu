@@ -286,6 +286,22 @@ def audit_qtigef_single_owner(bp_text, errors, rom_root):
                       'TARGET_ENABLE_XIAOMI_DOLBY guard, so Dolby products get '
                       'two writers for /vendor/lib/libqtigef.so')
 
+    # Both ABIs must ship. vendor/lib64/soundfx/libhwdap.so dlopen()s
+    # "libqtigef.so" and calls __android_log_assert when that fails, so a
+    # 32-bit-only install makes audioserver abort.
+    if 'compile_multilib: "both"' not in body:
+        errors.append('libqtigef_nabu must build for both ABIs: the 64-bit '
+                      'libhwdap dlopen()s libqtigef.so and aborts without it')
+    for abi in ('arm', 'arm64'):
+        if not re.search(rf'{abi}:\s*\{{[^}}]*srcs:', body):
+            errors.append(f'libqtigef_nabu has no {abi} source')
+    for rel in ('vendor/lib/libqtigef.so', 'vendor/lib64/libqtigef.so'):
+        blob = ROOT / 'proprietary' / rel
+        if not blob.is_file():
+            errors.append(f'missing Dolby GEF source blob: {rel}')
+        if rel not in (ROOT / 'proprietary-files.sha256sum').read_text():
+            errors.append(f'{rel} is not pinned in proprietary-files.sha256sum')
+
 
 def audit_pins(errors):
     sums = ROOT / 'proprietary-files.sha256sum'
