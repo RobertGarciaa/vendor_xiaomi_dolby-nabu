@@ -25,7 +25,7 @@ def main():
         raise SystemExit('Actual nabu combined policy missing. Build sepolicy_neverallows for custom_nabu first: ' + str(source))
     text = source.read_text()
     for marker in ('type hal_nabu_input_control_default,', 'type hal_dolby_dms_default,',
-                   'type vendor_sysfs_nabu_pen,', 'type sysfs_battery_supply,'):
+                   'type vendor_sysfs_nabu_pen,', 'type vendor_sysfs_battery_supply,'):
         if marker not in text:
             raise SystemExit('Policy lacks nabu integration; refusing a reference-device policy: ' + marker)
     tools = out / 'host/linux-x86/bin'
