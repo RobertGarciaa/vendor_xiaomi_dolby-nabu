@@ -303,6 +303,35 @@ def audit_qtigef_single_owner(bp_text, errors, rom_root):
             errors.append(f'{rel} is not pinned in proprietary-files.sha256sum')
 
 
+def audit_app_uses_libraries(bp_text, errors):
+    """Every previewed APK must declare its optional <uses-library> entries.
+
+    Android 17 rejects an APK whose manifest lists optional libraries the build
+    system does not know, and `enforce_uses_libs: false` hides that mismatch
+    instead of resolving it. Require an explicit optional_uses_libs list on the
+    app_import modules whose APKs carry such tags.
+    """
+    apks = {
+        'NabuMiuiInputSettings': 'product/app/MiuiInputSettings/MiuiInputSettings.apk',
+        'MiSound': 'product/app/MiSound/MiSound.apk',
+        'NabuStylusOta': 'system_ext/priv-app/NabuStylusOta/NabuStylusOta.apk',
+    }
+    for kind, body in module_blocks(bp_text):
+        if kind != 'android_app_import':
+            continue
+        name = field(body, 'name')
+        if name not in apks:
+            continue
+        if re.search(r'enforce_uses_libs:\s*false', body):
+            errors.append(f'{name} disables the uses-library check; declare '
+                          'optional_uses_libs so the build stays coherent with '
+                          'the APK manifest')
+        if not field_list(body, 'optional_uses_libs') and not field_list(body, 'uses_libs'):
+            # NabuStylusOta legitimately only has a required entry.
+            errors.append(f'{name} declares no uses-library list; the APK '
+                          'manifest will not match the build system')
+
+
 def audit_pins(errors):
     sums = ROOT / 'proprietary-files.sha256sum'
     for line in sums.read_text().splitlines():
@@ -334,8 +363,7 @@ def audit_no_symlink_on_hal(errors):
 def main():
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('--rom-root', type=Path,
-                   default=Path('/home/ccc/android/pixelos'),
+    p.add_argument('--rom-root', required=True, type=Path,
                    help='Android tree used to resolve inherited modules')
     p.add_argument('--verbose', action='store_true')
     a = p.parse_args()
@@ -347,6 +375,7 @@ def main():
     audit_inputs(bp_text, errors)
     audit_packages(bp_text, errors, a.rom_root)
     audit_qtigef_single_owner(bp_text, errors, a.rom_root)
+    audit_app_uses_libraries(bp_text, errors)
     audit_pins(errors)
     audit_no_symlink_on_hal(errors)
 

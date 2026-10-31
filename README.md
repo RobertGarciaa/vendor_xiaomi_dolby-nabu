@@ -1,8 +1,9 @@
 # Xiaomi Pad 5 stock features for PixelOS
 
 패드5(nabu) Global HyperOS **OS1.0.6.0.TKXMIXM / Android 13**의 Dolby Atmos를
-AOSP PixelOS Android 17에 통합하기 위한 저장소입니다. 전체 ROM 빌드와 실기기
-검증은 아직 수행하지 않았습니다. 현재 상태는 빌드 통합과 정적 검증을 마친 포팅 후보입니다.
+AOSP PixelOS Android 17에 통합하기 위한 저장소입니다. 전체 ROM 빌드는 완료했고
+Dolby Atmos는 스피커·이어폰에서 동작을 확인했습니다. 부팅 후 남은 확인 항목은
+[dolby-runtime 문서](docs/dolby-runtime-20261030.md)에 정리했습니다.
 [부팅 관련 정적 점검](docs/boot-preflight-20261027.md)에 정책·속성·init·VINTF 검사와
 전체 nabu 빌드 전제 조건을 구분해 기록했습니다.
 
@@ -33,10 +34,10 @@ PixelOS 설정에 추가합니다. 원본 MiuiInputSettings APK와 nabu 리소�
 - 기존 AOSP 일반 효과·전처리·볼륨 리스너는 보존하고 Atmos만 추가합니다.
   Game DAP, VQE, Dolby 미디어 디코더, MiSound의 다른 MIUI 전용 기능은 추가하지 않습니다.
 
-참고 구현은 `/home/ccc/android/예비/renoir/vendor/xiaomi/dolby-renoir`,
-커밋 `7aaea82`입니다. 그 저장소의 Poco X5 Pro 엔진, Xiaomi 12 Lite 튜닝,
-Redwood APK는 가져오지 않았습니다. Atmos 원본 스톡 파일 15개는 해시와 함께 Git에
-포함했습니다. 파생 APK는 `proprietary/ported/`에 생성하며 Git에서 제외합니다.
+참고 구현은 `vendor/xiaomi/dolby-renoir`(커밋 `7aaea82`)입니다. 그 저장소의
+Poco X5 Pro 엔진, Xiaomi 12 Lite 튜닝, Redwood APK는 가져오지 않았습니다.
+Atmos 원본 스톡 파일 15개는 해시와 함께 Git에 포함했습니다. 파생 APK는
+`proprietary/ported/`에 생성하며 Git에서 제외합니다.
 
 ## 빌드 트리에 배치
 
