@@ -236,6 +236,14 @@ android_app_import {
     apk: "proprietary/ported/product/app/MiSound/MiSound.apk",
     certificate: "platform",
     privileged: false,
+    // The stock manifest declares optional <uses-library> entries; list them all
+    // in manifest order. com.miui.core has no module here, so Soong passes it to
+    // the checker as missing instead of claiming it exists.
+    optional_uses_libs: [
+        "com.miui.core",
+        "androidx.window.extensions",
+        "androidx.window.sidecar",
+    ],
     dex_preopt: {
         enabled: false,
     },
