@@ -32,4 +32,20 @@ public final class AospCompat {
  }
  public static boolean systemPutInt(android.content.ContentResolver r,String key,int value){return systemPutIntForUser(r,key,value,android.os.UserHandle.USER_CURRENT);}
  public static android.net.Uri systemGetUriFor(String key){return "stylus_handwriting_enable".equals(key)?android.provider.Settings.Secure.getUriFor(android.provider.Settings.Secure.STYLUS_HANDWRITING_ENABLED):android.provider.Settings.System.getUriFor(key);}
+ // MIUI's InputManager carried its own pointer-speed accessors. AOSP only exposes
+ // them through Settings.System "pointer_speed", so read and write that key.
+ public static int getPointerSpeed(android.hardware.input.InputManager m, Context c){
+  if(c==null)return 0;
+  return android.provider.Settings.System.getInt(c.getContentResolver(),"pointer_speed",0);
+ }
+ public static void setPointerSpeed(android.hardware.input.InputManager m, Context c,int speed){
+  if(c==null)return;
+  android.provider.Settings.System.putInt(c.getContentResolver(),"pointer_speed",speed);
+ }
+ // AOSP has no static InputManager.getInstance(); resolve it from the app context
+ // captured by init(), which MiInputApplication calls in onCreate.
+ public static android.hardware.input.InputManager getInstance(){
+  android.app.Application app=miui.util.AppConstants.application;
+  return app==null?null:app.getSystemService(android.hardware.input.InputManager.class);
+ }
 }

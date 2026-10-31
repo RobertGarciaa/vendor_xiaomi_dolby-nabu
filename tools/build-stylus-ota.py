@@ -71,7 +71,7 @@ def main():
    for name in orig.namelist():
     if name.startswith(('res/','assets/','lib/')) or name in ['resources.arsc','classes.dex']:assert orig.read(name)==patched.read(name),name
   output=ROOT/'proprietary/ported/system_ext/priv-app/NabuStylusOta/NabuStylusOta.apk';output.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(work/'signed.apk',output)
-  record(ROOT,output,files+[Path(__file__).resolve(),ROOT/'tools/build-input.py',ROOT/'proprietary-input.sha256sum',raw,frames/'product/etc/device_features/nabu.xml']+sorted((ROOT/'input/ble-framework-smali').rglob('*.smali')),platform)
+  record(ROOT,output,files+[Path(__file__).resolve(),ROOT/'proprietary-input.sha256sum',raw,frames/'product/etc/device_features/nabu.xml']+sorted((ROOT/'input/ble-framework-smali').rglob('*.smali')),platform)
   print('Built focused original OTA companion:',output)
   print('Original primary DEX, resources, native payload and firmware protocol retained; only three services exposed.')
  finally:

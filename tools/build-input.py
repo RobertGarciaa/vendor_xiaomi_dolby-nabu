@@ -44,7 +44,7 @@ def main():
         stub=smali/'miui/hardware/input/MiuiInputManager.smali'
         assert stub.read_text().count('const/16 p0, 0x141')==1,'Unexpected stock manager stub'
         stub.unlink()
-        changed=[];lookups=flags=0
+        changed=[];lookups=flags=pointer=0
         for f in smali.rglob('*.smali'):
             before=f.read_text();after=before.replace('Landroid/provider/MiuiSettings$', 'Lorg/pixelos/nabu/compat/MiuiSettings$')
             after=after.replace('Landroid/view/KeyboardShortcutInfo;', 'Lorg/pixelos/nabu/compat/KeyboardShortcutInfo;').replace('"android.view.KeyboardShortcutInfo"','"org.pixelos.nabu.compat.KeyboardShortcutInfo"')
@@ -56,8 +56,14 @@ def main():
             after=after.replace('Landroid/provider/Settings$Secure;->getIntForUser(',COMPAT+'->secureGetIntForUser(').replace('Landroid/provider/Settings$Secure;->getUriFor(',COMPAT+'->secureGetUriFor(').replace('Landroid/provider/Settings$Secure;->putInt(',COMPAT+'->securePutInt(')
             after=after.replace('"enable_tap_touch_pad"','"touchpad_tap_to_click"')
             after=after.replace('Landroid/provider/Settings$System;->getIntForUser(',COMPAT+'->systemGetIntForUser(').replace('Landroid/provider/Settings$System;->getInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I',COMPAT+'->systemGetInt(Landroid/content/ContentResolver;Ljava/lang/String;I)I').replace('Landroid/provider/Settings$System;->getUriFor(',COMPAT+'->systemGetUriFor(').replace('Landroid/provider/Settings$System;->putInt(',COMPAT+'->systemPutInt(').replace('Landroid/provider/Settings$System;->putIntForUser(',COMPAT+'->systemPutIntForUser(')
+            # MIUI InputManager exposed pointer speed; AOSP has no such methods.
+            # Route both calls through the compat facade, which uses Settings.System.
+            after,n=re.subn(r'invoke-virtual \{([^}]+)\}, Landroid/hardware/input/InputManager;->getPointerSpeed\(Landroid/content/Context;\)I',r'invoke-static {\1}, '+COMPAT+r'->getPointerSpeed(Landroid/hardware/input/InputManager;Landroid/content/Context;)I',after);pointer+=n
+            after,n=re.subn(r'invoke-virtual \{([^}]+)\}, Landroid/hardware/input/InputManager;->setPointerSpeed\(Landroid/content/Context;I\)V',r'invoke-static {\1}, '+COMPAT+r'->setPointerSpeed(Landroid/hardware/input/InputManager;Landroid/content/Context;I)V',after);pointer+=n
+            after,n=re.subn(r'invoke-static \{\}, Landroid/hardware/input/InputManager;->getInstance\(\)Landroid/hardware/input/InputManager;',r'invoke-static {}, '+COMPAT+r'->getInstance()Landroid/hardware/input/InputManager;',after);pointer+=n
             if after!=before:f.write_text(after);changed.append(str(f.relative_to(smali)))
         assert lookups>3 and flags==2,(lookups,flags)
+        assert pointer==3,('input API calls rewritten',pointer)
         app=smali/'com/miui/miinput/MiInputApplication.smali'
         t=app.read_text();anchor='    invoke-super {p0}, Lmiuix/app/Application;->onCreate()V'
         assert t.count(anchor)==1
