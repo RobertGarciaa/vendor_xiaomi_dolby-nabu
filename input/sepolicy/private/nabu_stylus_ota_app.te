@@ -7,3 +7,7 @@ net_domain(nabu_stylus_ota_app)
 hwbinder_use(nabu_stylus_ota_app)
 hal_client_domain(nabu_stylus_ota_app, hal_nabu_touchfeature)
 binder_call(nabu_stylus_ota_app, bluetooth)
+
+# Stock stylus/OOB services use UEventObserver for kernel accessory events.
+# Allow reception only; do not grant net_admin, send/write or sysfs write access.
+allow nabu_stylus_ota_app self:netlink_kobject_uevent_socket { create bind read getattr getopt setopt };

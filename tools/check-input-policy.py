@@ -6,6 +6,7 @@ combined policy and selected access requirements; partitioned CIL, mapping,
 full contexts and final VINTF checks still belong to the product build.
 """
 import argparse
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -25,9 +26,16 @@ def main():
         raise SystemExit('Actual nabu combined policy missing. Build sepolicy_neverallows for custom_nabu first: ' + str(source))
     text = source.read_text()
     for marker in ('type hal_nabu_input_control_default,', 'type hal_dolby_dms_default,',
-                   'type vendor_sysfs_nabu_pen,', 'type sysfs_battery_supply,'):
+                   'type vendor_sysfs_nabu_pen,', 'type nabu_stylus_ota_app,'):
         if marker not in text:
             raise SystemExit('Policy lacks current nabu integration; rebuild nabu policy after source changes: ' + marker)
+    # Source type names can be rewritten by the product's policy preprocessing.
+    # Read the compiled IDT genfs labels instead of guessing the battery type.
+    battery_types = set(re.findall(
+        r'^genfscon\s+sysfs\s+\S+/power_supply/idt\s+u:object_r:([^:]+):s0',
+        text, re.M))
+    if not battery_types:
+        raise SystemExit('Current nabu policy has no IDT power-supply genfs label')
     tools = out / 'host/linux-x86/bin'
     for name in ('checkpolicy', 'checkfc', 'property_info_checker', 'sepolicy-analyze'):
         if not (tools / name).is_file():
@@ -51,15 +59,17 @@ def main():
             ('vendor_init', 'vendor_sysfs_nabu_pen', 'file', 'write'),
             ('vendor_init', 'vendor_sysfs_nabu_keyboard', 'file', 'write'),
             ('hal_nabu_input_control_default', 'vendor_sysfs_nabu_pen', 'file', 'write'),
-            # IDT is labeled sysfs_battery_supply, not vendor_sysfs_battery_supply.
-            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'open'),
-            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'read'),
-            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'getattr'),
             ('hal_nabu_input_control_default', 'vendor_nabu_input_control_prop', 'property_service', 'set'),
             ('vendor_init', 'vendor_nabu_input_control_prop', 'property_service', 'set'),
             ('vendor_init', 'vendor_dolby_config_prop', 'property_service', 'set'),
             ('hal_audio_default', 'hal_dolby_dms_hwservice', 'hwservice_manager', 'find'),
         ]
+        required.extend(('hal_nabu_input_control_default', battery_type, 'file', permission)
+                        for battery_type in sorted(battery_types)
+                        for permission in ('open', 'read', 'getattr'))
+        required.extend(('nabu_stylus_ota_app', 'nabu_stylus_ota_app',
+                         'netlink_kobject_uevent_socket', permission)
+                        for permission in ('create', 'bind', 'read', 'getattr', 'getopt', 'setopt'))
         for source_type, target, kind, permission in required:
             assertion = f'neverallow {source_type} {target}:{kind} {permission};'
             probe = subprocess.run([str(tools/'sepolicy-analyze'), str(policy), 'neverallow', '-n', assertion], capture_output=True, text=True)
