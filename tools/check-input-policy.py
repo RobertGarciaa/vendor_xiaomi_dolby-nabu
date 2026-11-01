@@ -25,9 +25,9 @@ def main():
         raise SystemExit('Actual nabu combined policy missing. Build sepolicy_neverallows for custom_nabu first: ' + str(source))
     text = source.read_text()
     for marker in ('type hal_nabu_input_control_default,', 'type hal_dolby_dms_default,',
-                   'type vendor_sysfs_nabu_pen,', 'type vendor_sysfs_battery_supply,'):
+                   'type vendor_sysfs_nabu_pen,', 'type sysfs_battery_supply,'):
         if marker not in text:
-            raise SystemExit('Policy lacks nabu integration; refusing a reference-device policy: ' + marker)
+            raise SystemExit('Policy lacks current nabu integration; rebuild nabu policy after source changes: ' + marker)
     tools = out / 'host/linux-x86/bin'
     for name in ('checkpolicy', 'checkfc', 'property_info_checker', 'sepolicy-analyze'):
         if not (tools / name).is_file():
@@ -51,6 +51,10 @@ def main():
             ('vendor_init', 'vendor_sysfs_nabu_pen', 'file', 'write'),
             ('vendor_init', 'vendor_sysfs_nabu_keyboard', 'file', 'write'),
             ('hal_nabu_input_control_default', 'vendor_sysfs_nabu_pen', 'file', 'write'),
+            # IDT is labeled sysfs_battery_supply, not vendor_sysfs_battery_supply.
+            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'open'),
+            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'read'),
+            ('hal_nabu_input_control_default', 'sysfs_battery_supply', 'file', 'getattr'),
             ('hal_nabu_input_control_default', 'vendor_nabu_input_control_prop', 'property_service', 'set'),
             ('vendor_init', 'vendor_nabu_input_control_prop', 'property_service', 'set'),
             ('vendor_init', 'vendor_dolby_config_prop', 'property_service', 'set'),
