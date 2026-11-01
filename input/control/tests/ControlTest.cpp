@@ -21,9 +21,18 @@ struct Fake final : nabu::Backend {
     bool save(const std::string& name,const std::string& value) override { if(failSave)return false;props[name]=value;return true; }
 };
 int main() {
+    // A missing persisted setting must not power the unsolicited USB cursor.
+    Fake enabled;
+    enabled.props[nabu::kProps[2]]="enable_keyboard";
+    assert(nabu::readState(enabled)[2]==1); // Explicit keyboard users keep their choice.
+    Fake firstEnable;
+    firstEnable.failSave=true;
+    assert(nabu::setControl(firstEnable,2,1)==-EIO);
+    assert(firstEnable.writes.back().second=="disable_keyboard");
+    assert(nabu::readState(firstEnable)[2]==0); // Failed first enable rolls back to off.
     Fake b;
     auto s=nabu::readState(b);
-    assert(s[0]==1 && s[1]==0 && s[2]==1 && s[3]==0 && s[4]==-1 && s[5]==-1);
+    assert(s[0]==1 && s[1]==0 && s[2]==0 && s[3]==0 && s[4]==-1 && s[5]==-1);
     assert(nabu::setControl(b,2,0)==0);
     s=nabu::readState(b);assert(s[2]==0 && s[3]==0); // Enable choice is not connection status.
     assert(b.writes.back().second=="disable_keyboard");

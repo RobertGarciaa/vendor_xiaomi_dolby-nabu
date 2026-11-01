@@ -21,7 +21,7 @@ std::array<int, 2> readPenChargingState(Backend& b) {
     return {measured(b, kChargingMode, 0, 1), measured(b, kChargingState, 0, 5)};
 }
 std::array<int, 6> readState(Backend& b) {
-    auto requested = b.property(kProps[2], "enable_keyboard");
+    auto requested = b.property(kProps[2], "disable_keyboard");
     // idtp9418 returns a fabricated 50% with reverse mode off. State 4 is
     // receiver-ready in this kernel; neither a Hall magnet nor TX mode alone
     // establishes a communicating pen. Recheck both after reading measurements.

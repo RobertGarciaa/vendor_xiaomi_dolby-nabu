@@ -7,4 +7,4 @@ on boot
     chown system system /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status
     write /sys/touchpanel/pen_gen2_force ${persist.vendor.nabu.input.pen_gen2:-0}
     write /sys/touchpanel/pen ${persist.vendor.nabu.input.pen:-1}
-    write /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status ${persist.vendor.nabu.input.keyboard:-enable_keyboard}
+    write /sys/devices/platform/soc/soc:xiaomi_keyboard/xiaomi_keyboard_conn_status ${persist.vendor.nabu.input.keyboard:-disable_keyboard}

@@ -17,10 +17,12 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_SYSTEM_PROPERTIES += ro.nabu.input_port=true
 # Initial hardware choices; values saved in /data/property take precedence.
+# Opt in to the internal keyboard bridge: it enumerates a mouse-capable USB
+# device even without a keyboard cover. The hardware-controls switch enables it.
 PRODUCT_VENDOR_PROPERTIES += \
     persist.vendor.nabu.input.pen=1 \
     persist.vendor.nabu.input.pen_gen2=0 \
-    persist.vendor.nabu.input.keyboard=enable_keyboard
+    persist.vendor.nabu.input.keyboard=disable_keyboard
 # The tracked stock HAL needs /dev/xiaomi-touch; crDroid's kernel exposes sysfs.
 # Keep it opt-in until a real HAL adapter or matching kernel ABI is supplied.
 TARGET_ENABLE_NABU_STOCK_TOUCHFEATURE ?= false
